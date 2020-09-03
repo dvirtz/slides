@@ -1,0 +1,145 @@
+.reveal .chapter {
+	display        : flex;
+	justify-content: center;
+	text-shadow    : 3px 3px black;
+	color          : lightblue;
+}
+
+.reveal .chapter.bottom {
+	align-items: flex-end;
+}
+
+.footnote {
+	display       : flex;
+	align-items   : start;
+	flex-direction: column;
+	font-size     : 0.5em;
+}
+
+input[type='checkbox'] {
+	-webkit-appearance: none;
+	background-color  : #fafafa;
+	border            : 1px solid #cacece;
+	box-shadow        : 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px 12px rgba(0, 0, 0, 0.05);
+	padding           : 9px;
+	border-radius     : 3px;
+	display           : inline-block;
+	position          : relative;
+	top               : 3px;
+}
+
+input[type='checkbox']:checked {
+	background-color: #e9ecee;
+	border          : 1px solid #adb8c0;
+	box-shadow      : 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px 12px rgba(0, 0, 0, 0.05), inset 15px 10px 12px rgba(255, 255, 255, 0.1);
+	color           : #99a1a7;
+}
+
+input[type='checkbox']:checked:after {
+	content  : '\2714';
+	font-size: 14px;
+	position : absolute;
+	top      : 0px;
+	left     : 3px;
+	color    : #99a1a7;
+}
+
+table.noborder td {
+	border-bottom: none;
+}
+
+table.noheader thead {
+	display: none;
+}
+
+.stack {
+	display: grid;
+}
+
+.stack>* {
+	grid-row   : 1;
+	grid-column: 1;
+}
+
+.r-stretch pre {
+	height: 100%;
+}
+
+.reveal pre[data-auto-animate-target] code {
+	overflow: hidden;
+}
+
+.highlight {
+	position       : relative;
+	z-index        : 1;
+	font-size      : 0.55em;
+	display        : flex;
+	font-weight    : bold;
+	justify-content: center;
+}
+
+.highlight.bottom {
+	align-items: flex-end;
+}
+
+.github-fork-ribbon:before {
+	background-color: #fff;
+}
+
+.github-fork-ribbon:after {
+	color: #333;
+}
+
+.split {
+	column-count: 2;
+}
+
+.split ul {
+	display: block;
+}
+
+.split li {
+	break-inside     : avoid;
+	page-break-inside: avoid;
+}
+
+.split h3 {
+	column-span: all;
+}
+
+.split input[type=checkbox] {
+	transform: scale(0.5) translateY(50%);
+}
+
+.reveal pre code.split {
+	column-rule   : solid #191919 10px;
+	padding-top   : 0px;
+	padding-bottom: 0px;
+}
+
+.reveal .aside pre code.split {
+	column-rule-color: #bee4fd;
+}
+
+.reveal div.split pre {
+	font-size: 0.35em;
+	margin   : 0px;
+	width    : auto;
+}
+
+.split.index {
+	column-count: 4;
+	font-size: 0.3em;
+	position : relative;
+}
+
+.reveal div.grid2 {
+	display: grid;
+	grid-template-columns: 50% 50%;
+}
+
+.reveal div.grid2 pre {
+	font-size: 0.35em;
+	width: 97%;
+	height: 95%;
+}
