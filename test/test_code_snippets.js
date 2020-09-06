@@ -1,26 +1,23 @@
 const { processElement, directives } = require('../scripts/compiler-explorer');
-const { fileList } = require('../scripts/index-reader');
-const { readFileSync, createReadStream } = require('fs');
+const { slideListSync } = require('../scripts/index-reader');
+const { readFileSync } = require('fs');
 const { describe, it } = require('mocha');
 const bent = require('bent');
 const chai = require('chai')
-  , should = chai.should();
+, should = chai.should();
 const { unstyle } = require('ansi-colors');
-const path = require('path');
-const { pwd, cwd } = require('process');
-const { assert, dir } = require('console');
+const { join } = require('path');
+const { cwd } = require('process');
 const promiseRetry = require('promise-retry');
 
-const SNIPPET_MARK = /^```/;
+const SNIPPET_MARK = /^\s*```/;
 const compile = bent('https://godbolt.org/', 'POST', 'json');
-
-const slideFile = file => readFileSync(path.join('slides', file), 'ascii');
 
 const fileSnippets = file => {
   let snippets = [];
   let currentSnippet = null;
 
-  slideFile(file)
+  readFileSync(join('slides', file), 'ascii')
     .split('\n')
     .forEach((line, index) => {
       if (currentSnippet) {
@@ -33,7 +30,7 @@ const fileSnippets = file => {
       } else if (line.match(SNIPPET_MARK)) {
         currentSnippet = {
           shortLocation: `${file}:${index + 1}`,
-          fullLocation: `${path.join(cwd(), 'slides', file)}:${index + 1}`,
+          fullLocation: `${join(cwd(), 'slides', file)}:${index + 1}`,
           code: []
         }
       }
@@ -42,19 +39,19 @@ const fileSnippets = file => {
   return snippets;
 };
 
-fileList(slideFile('index.md'))
+slideListSync(join('slides', 'index.md'))
   .map(file => {
     return {
       file: file,
-      snippets: fileSnippets(file)
+      snippets: fileSnippets(join(file, 'index.md'))
     };
   })
   .filter(fileSnippets => fileSnippets.snippets.length > 0)
   .map(fileSnippets => {
-    describe(`compile snippets from ${fileSnippets.file}`, function () {
+    describe(`compile ${fileSnippets.file}`, function () {
       this.timeout(60000);
 
-      fileSnippets.snippets.forEach(function (codeSnippet, index) {
+      fileSnippets.snippets.map(function (codeSnippet, index) {
         it(`should compile ${fileSnippets.file} snippet #${index}`, async function () {
           for (const line of codeSnippet.code) {
             const directiveMessage = `${codeSnippet.fullLocation} :\nwrong directive: ${line}`
