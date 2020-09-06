@@ -1,34 +1,34 @@
+const { readFileSync } = require('fs');
 const { readFile } = require('fs').promises;
-const path = require('path');
+const { join } = require('path');
 
-const LINE_SEPARATOR = '\n';
-const FILE_REF_REGEX = /^FILE: (.+)$/;
+const SLIDES = /^# Slides/
+const FILE_REF = /^FILE: (.+)$/gm;
+const SLIDE_REF = /- (.+)$/m;
 
-const loadFileContent = async (filePath, basePath) => {
-  return readFile(path.join(basePath, filePath));
-};
-
-const processLine = async (line, basePath) => {
-  const match = line.match(FILE_REF_REGEX)
-
-  if (match) {
-    return loadFileContent(match[1], basePath);
+const readIndex = async (markdown, options) => {
+  if (markdown.match(SLIDES)) {
+    return markdown.replace(SLIDE_REF, '[$1]($1/index.md)');
   }
 
-  return new Promise((resolve) => resolve(line));
+  return markdown.replace(FILE_REF, function (p1) {
+    return readFile(join(options.includeDir, p1));
+  });
 }
 
-const readIndex = async (markdown, options) =>
-  Promise.all(markdown
-    .split(LINE_SEPARATOR)
-    .map(line => processLine(line, options.includeDir)))
-    .then(lines => lines.join(LINE_SEPARATOR));
+const fileListImpl = async (path, re) =>
+  readFile(path, 'ascii').then(markdown =>
+    [...markdown.matchAll(re)]
+      .map(m => m[1]));
 
-const fileList = (markdown) =>
-  [...markdown.matchAll(new RegExp(FILE_REF_REGEX, 'gm'))]
+const fileListSyncImpl = (path, re) =>
+  [...readFileSync(path, 'ascii').matchAll(re)]
     .map(m => m[1]);
 
 module.exports = {
   readIndex,
-  fileList
+  fileList: async (path) => fileListImpl(path, FILE_REF),
+  slideList: async (path) => fileListImpl(path, SLIDE_REF),
+  fileListSync: (path) => fileListSyncImpl(path, FILE_REF),
+  slideListSync: (path) => fileListSyncImpl(path, SLIDE_REF)
 }
