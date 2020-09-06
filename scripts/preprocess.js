@@ -1,5 +1,13 @@
-const { readIndex } = require('./index-reader')
+const SLIDES = /^# Slides/
+const FILE_REF = /^FILE: (.+)$/gm;
+const SLIDE_REF = /\.md\)/m;
 
-const preprocess = readIndex;
+module.exports = async (markdown, options) => {
+  if (markdown.match(SLIDES) && options.static) {
+    return markdown.replace(SLIDE_REF, '.html)');
+  }
 
-module.exports = preprocess;
+  return markdown.replace(FILE_REF, function (p1) {
+    return readFile(join(options.includeDir, p1));
+  });
+}

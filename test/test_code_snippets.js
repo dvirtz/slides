@@ -1,5 +1,4 @@
 const { processElement, directives } = require('../scripts/compiler-explorer');
-const { slideListSync } = require('../scripts/index-reader');
 const { readFileSync } = require('fs');
 const { describe, it } = require('mocha');
 const bent = require('bent');
@@ -8,6 +7,7 @@ const chai = require('chai')
 const { unstyle } = require('ansi-colors');
 const { join } = require('path');
 const { cwd } = require('process');
+const { listFiles } = require('reveal-md/lib/util');
 const promiseRetry = require('promise-retry');
 
 const SNIPPET_MARK = /^\s*```/;
@@ -39,11 +39,11 @@ const fileSnippets = file => {
   return snippets;
 };
 
-slideListSync(join('slides', 'index.md'))
+listFiles('slides', '**/*.md')
   .map(file => {
     return {
       file: file,
-      snippets: fileSnippets(join(file, 'index.md'))
+      snippets: fileSnippets(file)
     };
   })
   .filter(fileSnippets => fileSnippets.snippets.length > 0)
