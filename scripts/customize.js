@@ -17,7 +17,7 @@ Reveal.addEventListener('ready', (event) => {
   $('.animated').addClass('should-animate').removeClass('animated');
   $(Reveal.getRevealElement()).prepend($('<a>', {
     class: 'github-fork-ribbon top-right fixed',
-    href: 'https://github.com/dvirtz/modern-cpp',
+    href: 'https://github.com/dvirtz/slides',
     'data-ribbon': 'Fork me on GitHub'
   }));
   $('.chapter').addClass('r-stretch');
