@@ -30,7 +30,7 @@ September 2020
 | November 2018 | Merged to C++20 |
 | ?? 2020 | Released in C++20 |
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
@@ -134,7 +134,7 @@ constexpr UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f)
 |`random_access_iterator` | bidirectional_iterator + random access (`it += n`)|
 |`contiguous_iterator` | random_access_iterator + contiguous in memory|
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
@@ -188,7 +188,7 @@ such that j == s.
 |`contiguous_range` | e.g. `std::vector`|
 |`common_range`|sentinel is same type as iterator|
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
@@ -202,7 +202,7 @@ such that j == s.
 |`ranges::empty` | checks if a range has no elements |
 |`ranges::data` | gives a pointer to the data of a contiguous range |
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 Note: `sized_range` doesn't imply `sized_sentinel` (e.g. `std::list`)
 

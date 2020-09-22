@@ -6,7 +6,8 @@
   "scripts": {
     "present": "reveal-md slides/index.md -w",
     "generate": "reveal-md slides --static .site",
-    "test": "mocha"
+    "test": "mocha",
+    "spellcheck": "cspell 'slides/**/*.md'"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "ansi-colors": "^4.1.1",
     "bent": "^7.3.10",
     "chai": "^4.2.0",
+    "cspell": "^4.1.0",
     "github-fork-ribbon-css": "^0.2.3",
     "jquery": "^3.5.1",
     "mocha": "^8.1.3",
