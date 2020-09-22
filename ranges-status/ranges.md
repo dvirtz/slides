@@ -8,13 +8,21 @@ Dvir Yitzchaki
 
 September 2020
 
+----
+
+## ranges primer
+
+![casey](casey.png)
+
+<!-- .element: class="r-stretch" -->
+
 ---
 
 ## history
 
 |date|event|
 |---|---|
-| November 2004 | Boost 1.32 includes Boost.Range by Niel Groves and Thorsten Ottosen |
+| November 2004 | Boost.Range released in Boost 1.32 |
 | May 2010 | Boost.Range 2.0 (first range adaptors) |
 | November 2013 | First commit to range-v3 |
 | October 2014 | Ranges for the Standard Library proposal |
@@ -22,16 +30,17 @@ September 2020
 | November 2018 | Merged to C++20 |
 | ?? 2020 | Released in C++20 |
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
 ## implementations
 
+- [Boost::Range](https://www.boost.org/doc/libs/1_74_0/libs/range/doc/html/index.html) by Thorsten Ottosen, Neil Groves et al.
 - [`range-v3`](https://github.com/ericniebler/range-v3) by Eric Niebler
 - [`cmcstl2`](https://github.com/CaseyCarter/cmcstl2) by Casey Carter
 - [`NanoRange`](https://github.com/tcbrindle/NanoRange) by Tristan Brindle
-- [`cjdb-ranges`](https://github.com/cjdb/cjdb-ranges) by Chris Di Bella
+- [`cjdb-ranges`](https://github.com/cjdb/cjdb-ranges) by Christopher Di Bella
 - `stdlibc++` 10.1
 - Visual Studio 16.8
 
@@ -125,7 +134,7 @@ constexpr UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f)
 |`random_access_iterator` | bidirectional_iterator + random access (`it += n`)|
 |`contiguous_iterator` | random_access_iterator + contiguous in memory|
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
@@ -179,7 +188,7 @@ such that j == s.
 |`contiguous_range` | e.g. `std::vector`|
 |`common_range`|sentinel is same type as iterator|
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 ---
 
@@ -193,7 +202,7 @@ such that j == s.
 |`ranges::empty` | checks if a range has no elements |
 |`ranges::data` | gives a pointer to the data of a contiguous range |
 
-<!-- .element: class="noborder noheader" style="font-size: 0.6em" -->
+<!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
 
 Note: `sized_range` doesn't imply `sized_sentinel` (e.g. `std::list`)
 
@@ -415,18 +424,6 @@ auto p = lower_bound(employees, "Niebler", {}, &employee::last_name);
 
 ---
 
-## range algorithms not in C++20
-
-- `<numerics>` ([P1813](https://wg21.link/p1813))
-- parallel algorithms ([P0836](https://wg21.link/p0836))
-- algorithms added after Ranges TS:
-  - ~~`for_each_n`, `clamp`, `sample`~~ ([P1243](https://wg21.link/p1243))
-  - `shift_left`, `shift_right` ([issue]("https://drive.google.com/open?id=1mVZNzYruZsDgMsNzEm5Wt1zvK7C5uCVAPvSrianCYDg"))
-  - `lexicographical_compare_three_way` ([P2022](https://github.com/wg21il/Papers/tree/P2022/master))
-  - `search(range, searcher)`
-
----
-
 ## views
 
 - a range type that has **constant time** copy, move, and assignment operators.
@@ -599,11 +596,7 @@ check_equal(subrange{begin(rng) + 1, end(rng)},
 
 ---
 
-## standardization
-
-`range-v3` has ~70 views, only a selection of is available in c++20
-
----
+<!-- .slide: data-auto-animate -->
 
 ## classic STL
 
@@ -625,9 +618,11 @@ int sum_of_squares(int count) {
 }
 ```
 
-<!-- .element: style="font-size: 0.45em" -->
+<!-- .element: data-id="code" style="font-size: 0.45em" -->
 
 ---
+
+<!-- .slide: data-auto-animate -->
 
 ## function call syntax
 
@@ -650,9 +645,11 @@ int sum_of_squares(int count) {
 }
 ```
 
-<!-- .element: style="font-size: 0.45em" -->
+<!-- .element: data-id="code" style="font-size: 0.45em" -->
 
 ---
+
+<!-- .slide: data-auto-animate -->
 
 ## piped syntax
 
@@ -672,7 +669,7 @@ int sum_of_squares(int count) {
 }
 ```
 
-<!-- .element: style="font-size: 0.45em" -->
+<!-- .element: data-id="code" style="font-size: 0.45em" -->
 
 ---
 
@@ -780,6 +777,7 @@ Note: It’s not the lvalue reference itself which owns the data, so if the refe
 ///hide
 #include <vector>
 #include <algorithm>
+#include <ranges>
 
 ///unhide
 std::vector<int> f();
@@ -793,15 +791,43 @@ auto vec     = f();
 auto result2 = std::ranges::find(vec, 42);
 static_assert(std::same_as<decltype(result2), 
               std::vector<int>::iterator>);
+
+auto result3 = std::ranges::find(std::views::iota(2), 42);
+static_assert(not std::same_as<decltype(result3), 
+              std::ranges::dangling>);
 ```
 
----
+  <!-- .element: style="font-size: 0.45em" -->
 
-# open proposals
+----
+
+## standardization
 
 ![committee](committee.jpeg)
 
 <!-- .element: class="r-stretch" -->
+
+---
+
+## range algorithms not in C++20
+
+- `<numerics>` ([P1813](https://wg21.link/p1813))
+- parallel algorithms ([P0836](https://wg21.link/p0836))
+- algorithms added after Ranges TS:
+  - ~~`for_each_n`, `clamp`, `sample`~~ ([P1243](https://wg21.link/p1243))
+  - `shift_left`, `shift_right` ([issue]("https://drive.google.com/open?id=1mVZNzYruZsDgMsNzEm5Wt1zvK7C5uCVAPvSrianCYDg"))
+  - `lexicographical_compare_three_way` ([P2022](https://github.com/wg21il/Papers/tree/P2022/master))
+  - `search(range, searcher)`
+
+---
+
+## views
+
+`range-v3` has ~70 views, only a selection of is available in c++20
+
+---
+
+# other open proposals
 
 ---
 
@@ -1061,10 +1087,21 @@ std::ranges::copy(source, std::ranges::unbounded_view(destination.begin()));
 
 Note: Not a proposal yet. passing output iterator is unsafe. one question is what to do when a container is passed, push or fill? ThePHD's answer is to fill by default and pass `std::ranges::unbounded_view{std::back_inserter(destination_data)}` otherwise.
 
-
 ---
 
-# Thank you
+[`zip_view`](https://wg21.link/p1035r4), Christopher Di Bella
+
+`zip_view`'s reference type is `tuple<Ts&...>` and its value type is `tuple<Ts...>` but there is no common reference between them.
+
+![zip](zip.png)
+
+<!-- .element: class="r-stretch" -->
+
+Note: this was removed from P1035 and should be proposed in another paper.
+
+----
+
+## Thank you
 
 ![dvir](dvir.jpg)
 
