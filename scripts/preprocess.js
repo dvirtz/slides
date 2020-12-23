@@ -9,7 +9,7 @@ const SVG_END = /<\/svg>/;
 const SVG_ID = /id="([^"]+)"/;
 const SVG_URL = /url\(#([^)]+)\)/;
 const SLIDES = /^# Slides/;
-const SLIDE_REF = /\.md\)/m;
+const SLIDE_REF = /\.md\)/mg;
 
 const loadFileContent = (filePath, options, svgState) => {
   const contents = readFileSync(path.join(options.initialDir, filePath), 'utf-8');
