@@ -2003,27 +2003,31 @@ int roll_a_fair_die( ) {
 
 ```cpp
 ///hide
-#include <https://raw.githubusercontent.com/lichray/randint/master/random.h>
 #include <algorithm>
 #include <vector>
+#include <random>
 
-namespace stdex {
-    template<typename It>
-    void shuffle(It from, It to) {
-        std::shuffle(from, to, detail::global_rng());
-    }
+namespace std {
+  template <typename IntType>
+  inline IntType randint(IntType a, IntType b);
+  
+  template<typename It>
+  void shuffle(It from, It to);
+
+  void reseed();
+  void reseed(std::default_random_engine::result_type value);
 }
 
-int main() {
+void foo() {
 std::vector<int> v;
 ///unhide
-stdex::randint(0, 6);              // randomly seeded
-stdex::randint(0L, 6L);            // deduced type
-stdex::randint<size_t>(0, 6);      // selected type
+std::randint(0, 6);              // randomly seeded
+std::randint(0L, 6L);            // deduced type
+std::randint<size_t>(0, 6);      // selected type
 
-stdex::reseed(0);                  // for debugging purpose
-stdex::shuffle(std::begin(v), std::end(v));
-stdex::reseed();                   // back to random
+std::reseed(0);                  // for debugging purpose
+std::shuffle(std::begin(v), std::end(v));
+std::reseed();                   // back to random
 ///hide
 }
 ```
@@ -2088,6 +2092,9 @@ Note: This proposal suggests generator wrappers with default seeding and convine
 ```cpp []
 ///hide
 #include <random>
+#include <array>
+#include <algorithm>
+#include <functional>
 
 ///unhide
 template <typename EngineT, std::size_t StateSize = EngineT::state_size>
@@ -2115,11 +2122,15 @@ void seed_non_deterministically(EngineT& engine)
 ## simplified
 
 ```cpp
+///hide
+#include <random>
+
+///unhide
 template <typename EngineT>
 void seed_non_deterministically(EngineT& engine)
 {
   std::random_device rnddev{};
-  engine.seed(rnddev());
+  engine.seed(rnddev);
 }
 ```
 
