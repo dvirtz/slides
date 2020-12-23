@@ -1,5 +1,12 @@
 {
   "highlight": {
     "highlightOnLoad": true
+  },
+  "compilerExplorer": {
+    "useLocal": true,
+    "compiler": "g83"
+  },
+  "math": {
+    "mathjax": "/_assets/node_modules/mathjax/MathJax.js"
   }
 }

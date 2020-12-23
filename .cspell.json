@@ -19,6 +19,10 @@
     // This is useful for offensive words and common spelling errors.
     // For example "hte" should be "the"
     "flagWords": [],
+    "ignorePaths": [
+        ".github/workflows/publish.yml",
+        "package.json"
+    ],
     "languageSettings": [
         {
             "languageId": "markdown",
