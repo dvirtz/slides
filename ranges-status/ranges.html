@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <title>reveal-md</title>
+    <link rel="shortcut icon" href="./../favicon.ico"/>
     <link rel="stylesheet" href="./../dist/reveal.css" />
     <link rel="stylesheet" href="./../dist/theme/black.css" id="theme" />
     <link rel="stylesheet" href="./../css/highlight/atom-one-dark.css" />
@@ -1109,13 +1110,13 @@ std::ranges::copy(source, std::ranges::unbounded_view(destination.begin()));
       // options from URL query string
       var queryOptions = Reveal().getQueryHash() || {};
 
-      var options = extend(defaultOptions, {"highlight":{"highlightOnLoad":true}}, queryOptions);
+      var options = extend(defaultOptions, {"highlight":{"highlightOnLoad":true},"compilerExplorer":{"useLocal":true,"compiler":"g83"},"math":{"mathjax":"/_assets/node_modules/mathjax/MathJax.js"}}, queryOptions);
     </script>
 
-    <script src="./../_assets/scripts/startfrom.js"></script>
     <script src="./../_assets/node_modules/jquery/dist/jquery.min.js"></script>
     <script src="./../_assets/scripts/customize.js"></script>
-    <script src="./../_assets/scripts/compiler-explorer.js"></script>
+    <script src="./../_assets/node_modules/reveal-compiler-explorer/dist/reveal-compiler-explorer.js"></script>
+    <script src="./../_assets/scripts/load-plugins.js"></script>
 
     <script>
       Reveal.initialize(options);
