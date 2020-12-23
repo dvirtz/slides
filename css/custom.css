@@ -1,19 +1,28 @@
-.reveal .chapter {
-	display        : flex;
-	justify-content: center;
-	text-shadow    : 3px 3px black;
-	color          : lightblue;
+.reveal .chapter,
+.reveal .chapter h2 {
+	display       : flex;
+	flex-direction: column;
+	text-shadow   : 3px 3px black;
+	color         : lightblue;
 }
 
 .reveal .chapter.bottom {
 	align-items: flex-end;
 }
 
+.footnote,
+.footnotes {
+	display    : flex;
+	align-items: start;
+	font-size  : 0.5em;
+}
+
 .footnote {
-	display       : flex;
-	align-items   : start;
+	white-space: break-spaces;
+}
+
+.footnotes {
 	flex-direction: column;
-	font-size     : 0.5em;
 }
 
 input[type='checkbox'] {
@@ -129,17 +138,25 @@ table.no-header thead {
 
 .split.index {
 	column-count: 4;
-	font-size: 0.3em;
-	position : relative;
+	font-size   : 0.3em;
+	position    : relative;
 }
 
 .reveal div.grid2 {
-	display: grid;
+	display              : grid;
 	grid-template-columns: 50% 50%;
 }
 
 .reveal div.grid2 pre {
 	font-size: 0.35em;
-	width: 97%;
-	height: 95%;
+	width    : 97%;
+	height   : 95%;
+}
+
+.reveal table .MathJax_Display {
+	margin: 0;
+}
+
+.reveal blockquote ul p:first-child, .reveal blockquote ul p:last-child {
+	display: inherit;
 }

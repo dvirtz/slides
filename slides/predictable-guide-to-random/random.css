@@ -1,0 +1,25 @@
+.distribution {
+  display: grid;
+  grid-template-areas:
+    "formula diagram"
+    "parameters diagram";
+  grid-template-columns: 50% 50%;
+}
+
+formula {
+  grid-area: formula;
+  font-size: 0.7em;
+}
+
+parameters {
+  grid-area: parameters;
+}
+
+parameters table {
+  font-size: 0.5em;
+}
+
+diagram {
+  background: #bee4fd;
+  grid-area : diagram;
+}
