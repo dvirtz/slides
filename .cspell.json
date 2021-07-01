@@ -1,23 +1,13 @@
-// cSpell Settings
 {
-    // Version of the setting file.  Always 0.1
     "version": "0.1",
-    // language - current active spelling language
     "language": "en",
-    // words - list of words to be always considered correct
     "words": [
-        "decltype",
         "dvir",
-        "noexcept",
-        "nullptr",
-        "Ottosen",
-        "rvalue",
-        "Thorsten",
+        "dvirtz",
+        "dvirtzwastaken",
+        "gmail",
         "yitzchaki"
     ],
-    // flagWords - list of words to be always considered incorrect
-    // This is useful for offensive words and common spelling errors.
-    // For example "hte" should be "the"
     "flagWords": [],
     "ignorePaths": [
         ".github/workflows/publish.yml",
@@ -27,7 +17,14 @@
         {
             "languageId": "markdown",
             "ignoreRegExpList": [
-                "/`[^`]+/"
+                "(`.*?`)|(<code>.*?</code>)", // inline code
+                "(```+)\\s?[\\s\\S]+?\\1", // code block
+                "'s\\b", // trailing 's
+                "<!--.*?-->", // comments
+                "\\]\\((#/)?[^\\)]+\\)", // internal links
+                "FILE: .*", // file inclusion
+                "(Source: .*)|(<div class=\"footnote(s?)\"\\s?[\\s\\S]+?</div>)", // footnotes
+                "<cite>.*?</cite>" // quote cites
             ]
         }
     ]
