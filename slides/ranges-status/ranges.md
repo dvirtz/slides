@@ -148,7 +148,7 @@ constexpr UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f)
 
 ---
 
-## A UNIFING CONSTRUCT
+## A UNIFYING CONSTRUCT
 
 A sentinel can be model
 
@@ -746,7 +746,7 @@ A range is a borrowed_range when you can hold onto its iterators after the range
 
 There are two kinds of borrowed ranges:
 
-- lvalue references to ranges. 
+- `lvalue` references to ranges. 
 - ranges which which opt in, by way of the new enable_borrowed_range variable template, e.g.
   ```cpp
   ///compiler=g102
@@ -765,7 +765,7 @@ There are two kinds of borrowed ranges:
 
   <!-- .element: style="font-size: 0.45em" -->
 
-Note: It’s not the lvalue reference itself which owns the data, so if the reference dies, we’re fine.
+Note: It’s not the `lvalue` reference itself which owns the data, so if the reference dies, we’re fine.
 
 ---
 
@@ -909,7 +909,7 @@ auto ints =
 }
 ```
 
-Splitting a range that is forward-or-better should yield subranges that are specializations of `subrange` while dropping `const`-iterability;
+Splitting a range that is forward-or-better should yield sub-ranges that are specializations of `subrange` while dropping `const`-iterability;
 
 Note: `split_view` doesn't preserve the source range category and is always `forward` at most
 
@@ -936,7 +936,7 @@ std::span v = s | views::drop(1) | views::take(2);
 }
 ```
 
-Adds a `reconstructible_range` concept and a `ranges::reconstruct` CPO for ranges which can be reconstructed from a subrange and/or iterator-sentinel pair.
+Adds a `reconstructible_range` concept and a `ranges::reconstruct` CPO for ranges which can be reconstructed from a `subrange` and/or iterator-sentinel pair.
 
 Note: range algorithms 'lose' the type of the given range and can only return `subrange`.
 
