@@ -302,11 +302,11 @@ using ranlux48_base
 
 <!-- .element: data-id="code" -->
 
-Note: ranlux is the name of the Fortran library which was the first implementation of this RNG.
+Note: reflux is the name of the Fortran library which was the first implementation of this RNG.
 
 ---
 
-## mersenne twister (MT)
+## Mersenne twister (MT)
 
 `$$ x_{k+n} := x_{k+m} \oplus \left( ({x_k}^u \mid\mid {x_{k+1}}^l) A \right) \qquad k=0,1,\ldots $$`
 
@@ -318,7 +318,7 @@ Note: This is a form of a shift register. `||` denotes concatenation of bit vect
 
 ---
 
-## mersenne twister (MT)
+## Mersenne twister (MT)
 
 on state `x` the engine's output will be
 
@@ -788,7 +788,7 @@ that sub-range.
 
 <!--.element: class="r-stretch" -->
 
-Successes/frailures in a series of trials.
+Successes/failures in a series of trials.
 
 Note: 
 
@@ -841,7 +841,7 @@ class bernoulli_distribution;
 </div>
 
 Note: Generates a result of true (success) with a specified probability, and false (failure) the rest of the time. 
-The distribution is memoryless in that each trial has the same chance of success, regardless of
+The distribution is memory-less in that each trial has the same chance of success, regardless of
 the history of previous results.
 
 ---
@@ -1330,7 +1330,7 @@ class chi_squared_distribution;
 Note: This distribution is of central importance to the
 statistical analysis of data, and is used to describe the distribution of quality-of-fit parameters.
 If one generates tuples of N numbers from N independent standard normal distributions,
-then the sum of the N elements of each tuple will be distributed according to the chisquared distribution with parameter N.
+then the sum of the N elements of each tuple will be distributed according to the chi-squared distribution with parameter N.
 
 ---
 
@@ -1959,7 +1959,7 @@ the random library. Let's discuss some of them.
 > 
 > - It’s amazingly elegant, a shining example of separation of concerns [with] a pluggable and extensible architecture [that’s] comprehensive and flexible.
 > 
-> - It’s horrible to use, ... unnecessarily overengineered. ... It’s completely unsuitable
+> - It’s horrible to use, ... unnecessarily over-engineered. ... It’s completely unsuitable
 > for beginners, and even seasoned programmers hate it.
 >
 > Both camps are right
@@ -2083,7 +2083,7 @@ Source: [P0347](wg21.link/p0347), R. "Tim" Song, Melissa O'Neill
 
 <!-- .element: class="footnote" -->
 
-Note: This proposal suggests generator wrappers with default seeding and convinence member functions
+Note: This proposal suggests generator wrappers with default seeding and convenience member functions
 
 ---
 

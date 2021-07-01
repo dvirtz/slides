@@ -294,9 +294,9 @@ using ranlux48_base
 
 <!-- .element: data-id="code" -->
 
-<aside class="notes"><p>ranlux is the name of the Fortran library which was the first implementation of this RNG.</p>
+<aside class="notes"><p>reflux is the name of the Fortran library which was the first implementation of this RNG.</p>
 </aside></script></section><section data-markdown><script type="text/template">
-## mersenne twister (MT)
+## Mersenne twister (MT)
 
 `$$ x_{k+n} := x_{k+m} \oplus \left( ({x_k}^u \mid\mid {x_{k+1}}^l) A \right) \qquad k=0,1,\ldots $$`
 
@@ -306,7 +306,7 @@ where
 
 <aside class="notes"><p>This is a form of a shift register. <code>||</code> denotes concatenation of bit vectors, <code>^u</code> means the upper <code>w - r</code> bits, and <code>^l</code> means the lower <code>r</code> bits.</p>
 </aside></script></section><section data-markdown><script type="text/template">
-## mersenne twister (MT)
+## Mersenne twister (MT)
 
 on state `x` the engine's output will be
 
@@ -1779,7 +1779,7 @@ that sub-range.</p>
 
 <!--.element: class="r-stretch" -->
 
-Successes/frailures in a series of trials.
+Successes/failures in a series of trials.
 
 <aside class="notes"><p>Named after Swiss mathematician Jacob Bernoulli.</p>
 <p>These distributions are related to Bernoulli processes. A Bernoulli process is a random process 
@@ -1825,7 +1825,7 @@ class bernoulli_distribution;
 </div>
 
 <aside class="notes"><p>Generates a result of true (success) with a specified probability, and false (failure) the rest of the time. 
-The distribution is memoryless in that each trial has the same chance of success, regardless of
+The distribution is memory-less in that each trial has the same chance of success, regardless of
 the history of previous results.</p>
 </aside></script></section><section data-markdown><script type="text/template">
 ### Binomial distribution
@@ -2297,7 +2297,7 @@ class chi_squared_distribution;
 <aside class="notes"><p>This distribution is of central importance to the
 statistical analysis of data, and is used to describe the distribution of quality-of-fit parameters.
 If one generates tuples of N numbers from N independent standard normal distributions,
-then the sum of the N elements of each tuple will be distributed according to the chisquared distribution with parameter N.</p>
+then the sum of the N elements of each tuple will be distributed according to the chi-squared distribution with parameter N.</p>
 </aside></script></section><section data-markdown><script type="text/template">
 ### Cauchy distribution
 
@@ -2887,7 +2887,7 @@ the random library. Let&#39;s discuss some of them.</p>
 > 
 > - It’s amazingly elegant, a shining example of separation of concerns [with] a pluggable and extensible architecture [that’s] comprehensive and flexible.
 > 
-> - It’s horrible to use, ... unnecessarily overengineered. ... It’s completely unsuitable
+> - It’s horrible to use, ... unnecessarily over-engineered. ... It’s completely unsuitable
 > for beginners, and even seasoned programmers hate it.
 >
 > Both camps are right
@@ -3008,7 +3008,7 @@ Source: [P0347](wg21.link/p0347), R. "Tim" Song, Melissa O'Neill
 
 <!-- .element: class="footnote" -->
 
-<aside class="notes"><p>This proposal suggests generator wrappers with default seeding and convinence member functions</p>
+<aside class="notes"><p>This proposal suggests generator wrappers with default seeding and convenience member functions</p>
 </aside></script></section><section data-markdown><script type="text/template">
 ## fully random seed
 
