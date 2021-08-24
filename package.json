@@ -28,11 +28,11 @@
     "github-fork-ribbon-css": "^0.2.3",
     "jquery": "^3.6.0",
     "mocha": "^9.0.1",
-    "reveal-test": "^2.0.1"
+    "reveal-test": "^2.1.2"
   },
   "dependencies": {
     "mathjax": "~2.7.4",
-    "reveal-compiler-explorer": "^1.4.1",
+    "reveal-compiler-explorer": "^1.6.1",
     "reveal-md": "^5.1.2"
   },
   "homepage": "https://github.com/dvirtz/modern-cpp#readme"
