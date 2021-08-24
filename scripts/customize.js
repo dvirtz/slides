@@ -15,7 +15,7 @@ Reveal.on('ready', (event) => {
   $('.aside').attr('data-background-color', "#bee4fd");
   $('.container code').attr('data-fragment-index', 0);
   $('.animated').addClass('should-animate').removeClass('animated');
-  $(Reveal.getRevealElement()).prepend($('<a>', {
+  $(Reveal.getRevealElement()).prepend($( '<a>', {
     class: 'github-fork-ribbon top-right fixed',
     href: 'https://github.com/dvirtz/slides',
     'data-ribbon': 'Fork me on GitHub'
@@ -56,13 +56,23 @@ Reveal.on('slidechanged', (event) => {
       $(this).find('code').css('overflow', 'auto')
     })
   $(event.previousSlide).find('pre[data-auto-animate-target] code').css('overflow', 'hidden');
+  $(event.currentSlide).find('.full-width').each(function (index, element) {
+    slides = Reveal.getSlidesElement();
+    $(this).css({
+      width: '100vw',
+      left: '50%',
+      transform: `translate(-50%) scale(${slides.offsetWidth / slides.getBoundingClientRect().width})`,
+      position: 'absolute'
+    });
+    $(this).find('p').css('margin-left', $(this).css('--r-block-margin'));
+  });
 });
 
 Reveal.on('overviewshown', event => {
-  const gifs = $('div[style*="background-image"]').filter(function() {
+  const gifs = $('div[style*="background-image"]').filter(function () {
     return $(this).css('background-image').includes('.gif');
   });
-  
+
   gifs.filter(':not([frozen-background])').each(function () {
     var c = document.createElement('canvas');
     var w = c.width = $(this).width();
@@ -74,16 +84,16 @@ Reveal.on('overviewshown', event => {
       $(this).attr('frozen-background', `url(${c.toDataURL("image/gif")})`);
       $(this).css('background-image', $(this).attr('frozen-background'));
     };
-    image.src = $(this).css('background-image').match(/\((.*?)\)/)[1].replace(/('|")/g,'');
+    image.src = $(this).css('background-image').match(/\((.*?)\)/)[1].replace(/('|")/g, '');
   });
 
-  gifs.filter('[frozen-background]').css('background-image', function() {
+  gifs.filter('[frozen-background]').css('background-image', function () {
     return $(this).attr('frozen-background');
   });
 });
 
 Reveal.on('overviewhidden', event => {
-  $('div[original-background]').css('background-image', function() {
+  $('div[original-background]').css('background-image', function () {
     return $(this).attr('original-background');
   });
 });

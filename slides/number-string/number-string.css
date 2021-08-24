@@ -1,0 +1,21 @@
+#comparison {
+  transform-origin: top left;
+  transform       : scale(0.6);
+}
+
+#comparison table {
+  table-layout: fixed;
+  width: 167%;
+}
+
+#comparison table th {
+  font-size: 0.8em;
+}
+
+#comparison table td:first-child,th:first-child {
+  width: 23%;
+}
+
+#comparison table td:nth-child(n+2),th:nth-child(n+2) {
+  width: 11%;
+}
