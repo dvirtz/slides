@@ -16,12 +16,14 @@ Image Source: [pixabay](https://pixabay.com/illustrations/devops-business-proces
 
 ---
 
-## Corutines Hello World
+## Coroutines Hello World
 
 ```cpp
 ///external
 ///options=/std:c++latest /await
 ///compiler=vcpp_v19_latest_arm64
+#include <experimental/generator>
+
 auto generate() { co_yield 42; }
 ```
 
