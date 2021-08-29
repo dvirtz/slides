@@ -312,7 +312,7 @@ Note: unfortunately, the `atoX` methods don't provide any error handling. there'
 - <!-- .element: class="con" --> no error handling
 - <!-- .element: class="con" --> not customizable
 - <!-- .element: class="con" --> unknown end
-- <!-- .element: class="con" --> <cde>itoa</code> / <code>ftoa</code> non standard
+- <!-- .element: class="con" --> <code>itoa</code> / <code>ftoa</code> non standard
 
 ----
 
@@ -774,7 +774,7 @@ std::string to_string( long double value );
 
 <!-- .element: style="font-size: 0.5em" -->
 
-Note: finally, a standard way to elegantly convert numbers to string. the API is too simple, however, and doesn't offer any customizablity (like base and precision).
+Note: finally, a standard way to elegantly convert numbers to string. the API is too simple, however, and doesn't offer any customizability (like base and precision).
 
 ---
 
@@ -1410,7 +1410,7 @@ Note: now it's time to compare the performance of all the functions we explored.
 
 ## random `double` ⟶ string
 
-[![dtoa-random](benchmarks/dtoa-random.png)](benchmarks/dtoa-random.cpp)
+[![double to string random](benchmarks/dtoa-random.png)](benchmarks/dtoa-random.cpp)
 
 by precision
 
@@ -1420,7 +1420,7 @@ Note: we can see the improvement of avoiding string copies by calling `num_put` 
 
 ## random string ⟶ `double`
 
-[![atod-digit](benchmarks/atod-digit.png)](benchmarks/atod-digit.cpp)
+[![string to double digit](benchmarks/atod-digit.png)](benchmarks/atod-digit.cpp)
 
 by digits
 
@@ -1428,13 +1428,13 @@ by digits
 
 ## random `int` ⟶ string
 
-[![itoa](benchmarks/itoa.png)](benchmarks/itoa.cpp)
+[![int to string](benchmarks/itoa.png)](benchmarks/itoa.cpp)
 
 ---
 
 ## random string ⟶ `int`
 
-[![atoi](benchmarks/atoi.png)](benchmarks/atoi.cpp)
+[![string to int](benchmarks/atoi.png)](benchmarks/atoi.cpp)
 
 ----
 
@@ -1515,7 +1515,7 @@ Source: [glibc](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_4
 
 Note:
 
-Those functions come from BSD Unix and are still available most C runtimes, including Microsoft CRT and `glibc`.
+Those functions come from BSD Unix and are still available most C runtime libraries, including Microsoft CRT and `glibc`.
 
 The function `ecvt` converts the floating-point number value to a string with at most `ndigit` decimal digits with no decimal point or sign. Those are instead stored at `decpt` and `neg` (`*decpt` is set to the index in the string of the first digit after the decimal point. `*neg` is set to a nonzero value if value is negative, zero otherwise. If value is zero, it is implementation defined whether `*decpt` is 0 or 1).
 If `ndigit` decimal digits would exceed the precision of a double it is reduced to a system-specific value.
