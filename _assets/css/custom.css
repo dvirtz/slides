@@ -157,6 +157,44 @@ table.no-header thead {
 	margin: 0;
 }
 
-.reveal blockquote ul p:first-child, .reveal blockquote ul p:last-child {
+.reveal blockquote ul p:first-child,
+.reveal blockquote ul p:last-child {
 	display: inherit;
 }
+
+.reveal ul li.pro,
+li.con {
+	padding-left: 0.5em;
+}
+
+.reveal ul li.pro::marker {
+	content: '+';
+	color  : green;
+}
+
+.reveal ul li.con::marker {
+	content: '–';
+	color  : red;
+}
+
+.reveal p.full_screen {
+	position: fixed;
+	width   : 100%;
+	height  : 100%;
+	top     : 0;
+}
+
+.reveal p.full_screen img {
+	object-fit: cover;
+	width     : 100%
+}
+
+.reveal pre[data-hide-line-numbers] .hljs-ln-numbers {
+	display: none;
+}
+
+.reveal mark {
+	background-color: #edfdbe;
+}
+
+.twt-actions { display: none; }

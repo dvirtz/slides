@@ -1,0 +1,30 @@
+{
+  "words": [
+    "haswell",
+    "Wextra",
+    "Ritchie",
+    "Kernighan",
+    "Bjarne",
+    "Stroustoup",
+    "customizability",
+    "Arvid",
+    "Zverovich",
+    "Corentin",
+    "Gerstmann",
+    "Ólafur",
+    "Waage",
+    "Tamir",
+    "Bahar",
+    "Latulippe"
+  ],
+  "languageSettings": [
+    {
+      "languageId": "markdown",
+      "ignoreRegExpList": [
+        "<blockquote[\\s\\S]+?</blockquote>", // twitter
+        "<code[\\s\\S]+?</code>", // code block
+
+      ]
+    }
+  ]
+}

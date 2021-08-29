@@ -1,0 +1,2886 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>reveal-md</title>
+    <link rel="shortcut icon" href="./../favicon.ico"/>
+    <link rel="stylesheet" href="./../dist/reveal.css" />
+    <link rel="stylesheet" href="./../dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="./../css/highlight/atom-one-dark.css" />
+    <link rel="stylesheet" href="./../_assets/node_modules/github-fork-ribbon-css/gh-fork-ribbon.css" />
+    <link rel="stylesheet" href="./../_assets/css/custom.css" />
+    <link rel="stylesheet" href="./../_assets/css/animations.css" />
+    <link rel="stylesheet" href="./../_assets/slides/number-string/number-string.css" />
+
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template">
+
+<!-- .slide: data-background-image="conf.png" data-background-size="contain" data-background-color="white" -->
+
+<div class="r-stretch" style="display: flex; flex-direction: column;">
+
+<div style="flex: 4;"></div>
+
+<div style="flex: 2;">
+
+The Many Faces of 
+
+## Number ⟷ String Conversions
+
+</div>
+
+<div style="flex: 1;"></div>
+
+<div style="flex: 1;">
+
+Dvir Yitzchaki
+
+</div>
+
+</div>
+
+</script></section><section  data-markdown><script type="text/template">
+## the task
+
+Implement a function that gets two decimal numbers as strings, adds them and returns the result as a string
+
+```cpp
+///hide
+struct String {};
+///unhide
+String add(String, String);
+```
+
+<aside class="notes"><p>the implementation should let the caller choose the type of numbers to use (<code>int</code>, <code>float</code>, etc.)</p>
+</aside></script></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird1.png" data-background-size="auto" data-background-position="5% 70%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">`std::atoi` generates a number from a string.<br><br>`std::iota` generates a string of numbers.<br><br>🤯</p>&mdash; Vector of Bool - 🌻 (@vector_of_bool) <a href="https://twitter.com/vector_of_bool/status/1173752717837139969?ref_src=twsrc%5Etfw">September 17, 2019</a></blockquote>
+
+<aside class="notes"><p>Dennis Ritchie and Brian Kernighan published the first <code>C</code> manual which is commonly known as K&amp;R in 1978. The first edition contained a function for converting character arrays to integers called <code>atoi</code> (not really related to <code>iota</code> which is a C++11 algorithm)</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `atoi`
+
+```c []
+///hide
+#if 1
+int atoi(char s[])
+#else
+///unhide
+atoi() /* convert s to integer */
+char s[];
+///hide
+#endif
+///unhide
+{
+    int i, n, sign;
+    for (i = 0; s[i]==' ' || s[i]=='\n' || s[i]=='\t'; i++)
+      ; /* skip white space */
+    sign = 1;
+    if (s[i] == '+' || s[i] == '-')  /* sign */
+        sign = (s[i++]=='+') ? 1 : -1;
+    for (n = 0; s[i] >= '0' && s[i] <= '9'; i++)
+        n = 10 * n + s[i] - '0';
+    return(sign * n);
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+Source: [K&R, 1st Ed.](https://archive.org/details/cprogramminglang00kern) 
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>This is the implementation as written in the 1st edition of K&amp;R. Note that the parameters were written after the parentheses and the return type was not written at all. The implementation is pretty strait forward.</p>
+<ul>
+<li>skip white space</li>
+<li>check sign</li>
+<li>on each step, multiply by 10 and add the next digit</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+## `atoi`
+
+```c []
+///hide
+#include <ctype.h>
+
+///unhide
+int atoi(const char *s)
+{
+  int n=0, neg=0;
+  while (isspace(*s)) s++;
+  switch (*s) {
+  case '-': neg=1;
+  case '+': s++;
+  }
+  /* Compute n as a negative number */
+    /* to avoid overflow on INT_MIN */
+  while (isdigit(*s))
+    n = 10*n - (*s++ - '0');
+  return neg ? n : -n;
+}
+```
+
+Source: [musl](https://git.musl-libc.org/cgit/musl/tree/src/stdlib/atoi.c) 
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>this is the implementation from modern <code>musl</code> c library. as you can see it&#39;s pretty much the same.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `atof`
+
+```c [|11-17]
+///hide
+#include <ctype.h>
+
+///unhide
+/* atof:  convert string s to double */
+double atof(char s[])
+{
+  double val, power;
+  int i, sign;
+  for (i = 0; isspace(s[i]); i++)  /* skip white space */
+      ;
+  sign = (s[i] == '-') ? -1 : 1;
+  if (s[i] == '+' || s[i] == '-')
+      i++;
+  for (val = 0.0; isdigit(s[i]); i++)
+      val = 10.0 * val + (s[i] - '0');
+  if (s[i] == '.')
+      i++;
+  for (power = 1.0; isdigit(s[i]); i++) {
+      val = 10.0 * val + (s[i] - '0');
+      power *= 10.0;
+  }
+  return sign * val / power;
+}
+```
+
+Source: [K&R, 2nd Ed.](https://archive.org/details/cprogramminglang00bria) 
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>Here is the implementation of <code>atof</code> (which despite the name, returns a double!) from the 2nd edition of K&amp;R. As can be seen, it&#39;s based on the same algorithm, only calculating the integral and fractional part separately. It was not until C99, that this function got support for hexadecimal floating-point, INFs and NANs.</p>
+<!-- .element: class="footnote" --></aside></script></section><section data-markdown><script type="text/template">
+<h2><code>ato<span style="color: #fdd7be">Y</span></code></h2>
+
+```c
+long      atol  ( const char* str );
+int       atoi  ( const char* str );
+long long atoll ( const char* str );    // C99
+
+double atof( const char* str );
+```
+
+<aside class="notes"><p>These are the &quot;overloads&quot; of array to number currently in the C standard. Note that there are no unsigned versions.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `itoa`
+
+```c []
+///hide
+#include <string.h>
+
+void reverse(char s[])
+{
+    int c, i, j;
+
+    for (i = 0, j = strlen(s)-1; i < j; i++, j--) {
+        c = s[i];
+        s[i] = s[j];
+        s[j] = c;
+    }
+}
+
+#if 0
+///unhide
+itoa(n, s) /* convert `s` to integer */
+char s [];
+int n;
+///hide
+#else
+void itoa(int n, char s[])
+#endif
+///unhide
+{
+  int i, sign;
+  
+  if ((sign = n) < 0) /* record sign */
+    n = -n;           /* make n positive */
+  i = 0;
+  do {    /* generate digits in reverse order */
+    s[i++] = n % 10 + '0';  /* get next digit */
+  } while ((n /= 10) > 0); /* delete it */
+  if (sign < 0)
+    s[i++] = '-';
+  s[i] = '\0';
+  reverse(s);
+}
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+Source: [K&R, 1st Ed.](https://archive.org/details/cprogramminglang00kern) 
+
+<aside class="notes"><p>K&amp;R also had the opposite function, called <code>itoa</code> (again, don&#39;t confuse with <code>iota</code>). For some reason, it was not added to the C standard but is provided by Microsoft&#39;s CRT and some other C libraries. glibc has it as an implementation detail.
+This algorithm generates the digits in reverse order and then reverses the result.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code><span style="color: #bee4fd">X</span>to<span style="color: #fdd7be">Y</span></code></h2>
+
+```c
+///hide
+#include <stdlib.h>
+
+void itoa(int, char*);
+void ftoa(double, char*, int);
+
+///unhide
+void addi(const char* lhs, const char* rhs, char* result) {
+  const int l = atoi(lhs);
+  const int r = atoi(rhs);
+  itoa(l + r, result);
+}
+
+void addf(const char* lhs, const char* rhs, char* result, 
+          int precision) {
+  const double l = atof(lhs);
+  const double r = atof(rhs);
+  ftoa(l + r, result, precision);
+}
+```
+
+<aside class="notes"><p>here is the implementation of our task using <code>Xtoa</code> and <code>atoY</code> functions. We should write a different implementation for each type of number as the functions are named differently. The floating point version also allows the caller to set the desired precision.
+Besides the necessary repetition, the code is as clean and readable as can be.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+- string ⟶ number
+  - no conversion possible
+  - out of range
+- number ⟶ string
+  - buffer overflow
+- invalid arguments
+
+<aside class="notes"><p>when converting between strings and numbers those are the typical errors we&#39;re likely to encounter. we will examine how the different methods help us avoid or at least be notified about those errors.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## no error handling
+
+```c
+///hide
+#include <assert.h>
+#include <stdlib.h>
+
+int main() {
+///unhide
+assert(atoi("junk") == 0);
+int undefined = atoi("2147483648");
+///hide
+}
+```
+
+<aside class="notes"><p>unfortunately, the <code>atoX</code> methods don&#39;t provide any error handling. there&#39;s no way to tell a wrong result from a valid one.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code><span style="color: #bee4fd">X</span>to<span style="color: #fdd7be">Y</span></code></h2>
+
+- <!-- .element: class="pro" --> simple and intuitive API
+- <!-- .element: class="pro" --> efficient
+- <!-- .element: class="con" --> undefined value on overflow
+- <!-- .element: class="con" --> no error handling
+- <!-- .element: class="con" --> not customizable
+- <!-- .element: class="con" --> unknown end
+- <!-- .element: class="con" --> <code>itoa</code> / <code>ftoa</code> non standard
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird2.png" data-background-size="auto" data-background-position="95% 20%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">Tired: C with classes<br>Wired: C with templates</p>&mdash; 🤍❤️🤍 Moji Baker (@vzverovich) <a href="https://twitter.com/vzverovich/status/1407344536465117186?ref_src=twsrc%5Etfw">June 22, 2021</a></blockquote>
+
+<aside class="notes"><p>The development of C in the 80s, during its standardization, mostly came from implementing Unix versions. We&#39;ll now take a look at functions coming from Unix but again, not all of them ending in the standard.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>strto<span style="color: #bee4fd">X</span></code></h2>
+
+```c
+///hide
+#include <stdint.h>
+
+///unhide
+long                strtol    ( const char* str, char** str_end, int base );
+long long           strtoll   ( const char* str, char** str_end, int base );  // C99
+unsigned long       strtoul   ( const char* str, char** str_end, int base );
+unsigned long long  strtoull  ( const char* str, char** str_end, int base );  // C99
+intmax_t            strtoimax ( const char* str, char** str_end, int base );  // C99
+uintmax_t           strtoumax ( const char* str, char** str_end, int base );  // C99
+
+float               strtof    ( const char* str, char** str_end           );  // C99
+double              strtod    ( const char* str, char** str_end           );
+long double         strtold   ( const char* str, char** str_end           );  // C99
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>The first family is <code>strtoX</code>. They function similarly to the <code>atoX</code> functions but offer a richer API. It is possible to get the position where the number parsing has ended at and to customize the base, which can be between 2 and 36 for the integral overloads. Integral types below <code>long</code> are not provided and the called is expected to call the <code>long</code> version and cast the result.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>strto<span style="color: #bee4fd">X</span></code></h2>
+
+```c
+///hide
+#include <stddef.h>
+#include <stdlib.h>
+
+void itoa(int, char*);
+void ftoa(double, char*, int);
+
+///unhide
+void addl(const char* lhs, const char* rhs, char* result) {
+  const long l = strtol(lhs, NULL, 10);
+  const long r = strtol(rhs, NULL, 10);
+  itoa(l + r, result);
+}
+
+void addd(const char* lhs, const char* rhs, char* result, 
+          int precision) {
+  const double l = strtod(lhs, NULL);
+  const double r = strtod(rhs, NULL);
+  ftoa(l + r, result, precision);
+}
+```
+
+</script></section><section data-markdown><script type="text/template">
+## error handling
+
+```c [1-5|7-10]
+///hide
+#include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
+#include <assert.h>
+
+int main() {
+///unhide
+errno = 0;
+char* end;
+const long l = strtol("10000000000000000000", &end, 10);
+assert(l == LONG_MAX);
+assert(errno == ERANGE);
+
+const char* str = "junk";
+const double d = strtod(str, &end);
+assert(d == 0);
+assert(end == str);
+///hide
+}
+```
+
+<aside class="notes"><p>unlike <code>atoX</code>, <code>strtoX</code> provides error handling by setting <code>errno</code> in case of an out of range input and by setting end to the start of the string if no conversion was possible.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>strto<span style="color: #bee4fd">X</span></code></h2>
+
+- <!-- .element: class="pro" --> customizable
+- <!-- .element: class="pro" --> efficient
+- <!-- .element: class="pro" --> error handling
+- <!-- .element: class="con" --> one way only
+- <!-- .element: class="con" --> no default arguments
+- <!-- .element: class="con" --> no generality
+
+<aside class="notes"><p><code>strtoX</code> suffers from the usual drawbacks of any C API.</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird3.png" data-background-size="auto" data-background-position="80% 80%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">sprintf() has nothing to do with running.</p>&mdash; Ólafur Waage (@olafurw) <a href="https://twitter.com/olafurw/status/1406148416040755203?ref_src=twsrc%5Etfw">June 19, 2021</a></blockquote>
+
+<aside class="notes"><p>the last C functions we&#39;ll explore are not used specifically for number ⟷ string conversions but like any IO methods, they should support converting between strings and numbers.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## ALGOL 68
+
+
+```algol68
+printf(($"Color "g", number1 "6d,", number2 "4zd,", 
+        hex "16r2d,", float "-d.2d,", 
+        unsigned value"-3d"."l$,
+        "red", 123456, 89, BIN 255, 3.14, 250));
+```
+
+<aside class="notes"><p>The abstract promised looking at other languages. We won&#39;t have time to do that unfortunately, but here is a teaser.
+ALGOL 68 is the language that invented <code>printf</code>. Note how the formatting directives are written between the textual parts.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>s<span style="color: #bee4fd">X</span>f</code></h2>
+
+```c
+///hide
+#include <stddef.h>
+
+typedef size_t rsize_t;
+
+///unhide
+int sprintf    ( char *buffer,                const char *format, ... );
+int snprintf   ( char *buffer, size_t bufsz,  const char *format, ... );  // C99
+int snprintf_s ( char *buffer, rsize_t bufsz, const char *format, ... );  // C11
+int sprintf_s  ( char *buffer, rsize_t bufsz, const char *format, ... );  // C11
+
+int sscanf   ( const char *buffer, const char *format, ... );
+int sscanf_s ( const char *buffer, const char *format, ... );             // C11
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>For our needs, we&#39;ll use the variants which read or write to a character array instead of the screen. The secure versions (ending with &#39;_s&#39;) offer more error checking but aren&#39;t implemented in most c libs (even the microsoft implementation is not standard conforming) and there are even proposals to remove them from the standard.</p>
+<p><code>rsize_t</code> is an alias to <code>size_t</code> but functions will error out if input is larger from <code>RSIZE_MAX</code> to protect from passing negative values.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>s<span style="color: #bee4fd">X</span>f</code></h2>
+
+```c
+///hide
+#include <cstdio>
+
+///unhide
+void addi(const char* lhs, const char* rhs, char* result) {
+  int l, r;
+  sscanf(lhs, "%d", &l);
+  sscanf(rhs, "%d", &r);
+  sprintf(result, "%d", l + r);
+}
+
+void addf(const char* lhs, const char* rhs, char* result, 
+          int precision) {
+  double l, r;
+  sscanf(lhs, "%lg", &l);
+  sscanf(rhs, "%lg", &r);
+  sprintf(result, "%.*lg", precision, l + r);
+}
+```
+
+<aside class="notes"><p>here the core is less readable. One has to know the formatting flags, although most programmers do. It might have been possible to write a generic implementation by providing a mapping from type to format string but it would be cumbersome.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## number formatting
+  
+```c []
+///hide
+#include <stdio.h>
+
+int main(void) {
+///unhide
+printf("%x\n",   42);   // prints 2a
+printf("%X\n",   42);   // prints 2A
+printf("%#o\n",  42);   // prints 052
+printf("%+d\n",  42);   // prints +42
+printf("%.5u\n", 42);   // prints 00042
+
+printf("%f\n",   0.42); // prints 0.420000
+printf("%e\n",   0.42); // prints 4.200000e-01
+printf("%E\n",   0.42); // prints 4.200000E-01
+printf("%a\n",   0.42); // prints 0x1.ae147ae147ae1p-2
+printf("%.3A\n", 0.42); // prints 0X1.AE1P-2
+printf("%g\n",   0.42); // prints 0.42
+///hide
+}
+```
+
+<aside class="notes"><p><code>sprintf</code> is highly customizable. here&#39;s the stuff you can do</p>
+<ul>
+<li>different base</li>
+<li>uppercase </li>
+<li>print the base prefix</li>
+<li>force sign</li>
+<li>precision for integers simply prepends zeros</li>
+</ul>
+<p>floating points have the</p>
+<ul>
+<li>fixed representation (the default precision is 6)</li>
+<li>exponential</li>
+<li>uppercase</li>
+<li>hexadecimal (exponent is <code>p</code>)</li>
+<li>precision means number of digits after the decimal point</li>
+<li>the general representation is fixed for small numbers and exponential for large and also truncates trailing zeros</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+```c [1-3|5-8|10-12]
+///noexecute
+///options=-Wformat=2
+///hide
+#include <stdio.h>
+#include <assert.h>
+#include <errno.h>
+
+int main() {
+///unhide
+float f;
+int res = sscanf("junk", "%g", &f);
+assert(res == 0);
+
+int i;
+errno = 0;
+sscanf("2147483648", "%i", &i);
+assert(errno == ERANGE); // Linux only
+
+i = 42;
+char buffer[sizeof i];
+sprintf(buffer, "%d", i); // UB
+///hide
+}
+```
+
+<aside class="notes"><p><code>sscanf</code> offers the same error handling as <code>strtoX</code> but <code>sprintf</code> suffers UB if</p>
+<ul>
+<li>buffer overflows</li>
+<li>invalid conversion spec</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>s<span style="color: #bee4fd">X</span>f</code></h2>
+
+- <!-- .element: class="pro" --> customizable
+- <!-- .element: class="pro" --> efficient
+- <!-- .element: class="con" --> little error handling
+- <!-- .element: class="con" --> less readable
+- <!-- .element: class="con" --> no generality
+- <!-- .element: class="con" --> only bases 8, 10, 16
+
+<aside class="notes"><p>Most of us still have to look up the more rarely-used formatting flags, but they are after all used rarely. binary would be useful.</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird1.png" data-background-size="auto" data-background-position="5% 20%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">Converting an integer into a string in C++ has never been easier: <br>std::string s = static_cast&lt;std::ostringstream&amp;&gt;(std::ostringstream() &lt;&lt; i).str();</p>&mdash; 🤍❤️🤍 std::easily_ignorable (@vzverovich) <a href="https://twitter.com/vzverovich/status/1394330984015745025?ref_src=twsrc%5Etfw">May 17, 2021</a></blockquote> 
+
+<aside class="notes"><p>The IO stream library was written by Bjarne Stroustoup in 1985 for the 2nd release of CFront. The first implementations didn&#39;t include <code>stringstream</code> which was added during the standardization process around 1995. The version you see here only compiles from C++11.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## <code>std::<span style="color: #bee4fd">X</span>stringstream</code>
+
+```cpp [2-5|7-10|12-15]
+///hide
+template<typename CharT>
+class char_traits;
+
+template<typename CharT>
+class allocator;
+
+///unhide
+namespace std {
+template<class CharT, class Traits = char_traits<CharT>,
+          class Allocator = allocator<CharT>>
+class basic_stringstream;
+using stringstream  = basic_stringstream<char>;
+
+template<class CharT, class Traits = char_traits<CharT>,
+         class Allocator = allocator<CharT>>
+class basic_istringstream;
+using istringstream  = basic_istringstream<char>;
+
+template<class CharT, class Traits = char_traits<CharT>,
+         class Allocator = allocator<CharT>>
+class basic_ostringstream;
+using ostringstream  = basic_ostringstream<char>;
+}
+```
+
+<!-- .element: data-hide-line-numbers style="font-size: 0.5em" -->
+
+<aside class="notes"><p>like <code>std::string</code>, <code>stringstream</code> is actually a specialization of <code>basic_stringstream</code> and there are classes for input or output only. Interestingly, the input/output version doesn&#39;t inherit from them. <em>We won&#39;t cover the wide character versions today.</em></p>
+</aside></script></section><section data-markdown><script type="text/template">
+## <code>std::<span style="color: #bee4fd">X</span>stringstream</code>
+
+```cpp [3-5,16|6-10|12-15]
+///hide
+#include <sstream>
+#include <iomanip>
+
+///unhide
+constexpr int DEFAULT_PRECISION = 6;
+
+template<typename T>
+std::string add(const std::string& lhs, const std::string& rhs, 
+                int precision = DEFAULT_PRECISION) {  
+  T l, r;
+  std::istringstream in{lhs};  
+  in >> l;
+  in.str(rhs);
+  in >> r;
+  
+  std::ostringstream out;
+  out << std::setprecision(precision) << std::fixed 
+      << l + r;
+  return out.str();
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+<aside class="notes"><p>now we&#39;re finally able to write a generic implementation. Note that we have to feed the input strings to the <code>stringstream</code> before we can use it to parse the numbers and to copy the result string out of the <code>stringstream</code> in order to return it to the caller.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+```cpp []
+///hide
+#include <sstream>
+#include <cassert>
+
+int main() {
+///unhide
+std::stringstream sst;
+sst << "junk";
+float f;
+sst >> f;
+assert(sst.fail());
+
+sst.clear();
+int i;
+sst << "2147483648";
+sst >> i;
+assert(sst.fail());
+///hide
+}
+```
+
+<aside class="notes"><p>The main disadvantages of <code>sprintf</code> are avoided due to the use of typed operators and dynamic containers like <code>std::string</code>. Other failures are signaled through the <code>fail</code> method.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## prefer exceptions?
+
+```cpp [2|5-12|14-22|24]
+///hide
+#include <sstream>
+#include <iostream>
+#include <cassert>
+
+int main() {
+///unhide
+std::stringstream sst;
+sst.exceptions(std::ios_base::failbit);
+auto exception_count = 0;
+
+sst << "junk";
+try {
+  float f;
+  sst >> f;
+} catch (const std::ios_base::failure& fail) {
+  std::cerr << fail.what() << '\n';
+  ++exception_count;
+}
+
+sst.clear();
+sst << "2147483648";
+try {
+  int i;
+  sst >> i;
+} catch (const std::ios_base::failure& fail) {
+  std::cerr << fail.what() << '\n';
+  ++exception_count;
+}
+
+assert(exception_count == 2);
+///hide
+}
+```
+
+<aside class="notes"><p>It&#39;s also possible to ask the stream to throw exceptions in case of such failures.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `stringstream`
+
+- <!-- .element: class="pro" --> customizable
+- <!-- .element: class="pro" --> generic
+- <!-- .element: class="pro" --> secure
+- <!-- .element: class="con" --> verbose
+- <!-- .element: class="con" --> requires synchronization
+  - locale
+  - format flags
+- <!-- .element: class="con" --> only bases 8, 10, 16
+
+<aside class="notes"><p>synchronization is required as the streams hold state.</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird2.png" data-background-size="auto" data-background-position="85% 70%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">I&#39;m trying to teach modern C++ over here, why is `this` a pointer? <a href="https://t.co/lZ3wUmBoji">pic.twitter.com/lZ3wUmBoji</a></p>&mdash; Corentin (@Cor3ntin) <a href="https://twitter.com/Cor3ntin/status/1415944084695420929?ref_src=twsrc%5Etfw">July 16, 2021</a></blockquote>
+
+<aside class="notes"><p>it is common to call the versions of C++ starting from C++11 &quot;modern&quot;. unfortunately, there&#39;s still quite a lot of unbreakable legacy we still have to deal with. if <code>stringstream</code> was the answer to <code>sprintf</code> and <code>sscanf</code>, C++11 added the C++ versions of the <code>strtoX</code> versions but also they&#39;re missing counterparts.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `to_string`
+
+```cpp
+///hide
+namespace std {
+  class string;
+}
+
+///unhide
+std::string to_string( int value );
+std::string to_string( long value );
+std::string to_string( long long value );
+std::string to_string( unsigned value );
+std::string to_string( unsigned long value );
+std::string to_string( unsigned long long value );
+std::string to_string( float value );
+std::string to_string( double value );
+std::string to_string( long double value );
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+<aside class="notes"><p>finally, a standard way to elegantly convert numbers to string. the API is too simple, however, and doesn&#39;t offer any customizability (like base and precision).</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird3.png" data-background-size="auto" data-background-position="85% 20%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">What does std::to_string(0.5e-6) return?</p>&mdash; 🤍❤️🤍 Unimplementer (@vzverovich) <a href="https://twitter.com/vzverovich/status/1363329385638490113?ref_src=twsrc%5Etfw">February 21, 2021</a></blockquote>
+
+<aside class="notes"><p>here is a question for you. who thinks the correct answer is 1, 2, 3 or 4? (it is 2).</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>sto<span style="color: #bee4fd">X</span></code></h2>
+
+```cpp
+///hide
+#include <cstdint>
+
+namespace std {
+  class string;
+}
+
+///unhide
+int       stoi  ( const std::string& str, std::size_t* pos = nullptr, int base = 10 );
+long      stol  ( const std::string& str, std::size_t* pos = nullptr, int base = 10 );
+long long stoll ( const std::string& str, std::size_t* pos = nullptr, int base = 10 );
+
+unsigned long      stoul  ( const std::string& str, std::size_t* pos = nullptr, int base = 10 );
+unsigned long long stoull ( const std::string& str, std::size_t* pos = nullptr, int base = 10 );
+
+float       stof  ( const std::string& str, std::size_t* pos = nullptr );
+double      stod  ( const std::string& str, std::size_t* pos = nullptr );
+long double stold ( const std::string& str, std::size_t* pos = nullptr );
+```
+
+<!-- .element: style="font-size: 0.35em" -->
+
+<aside class="notes"><p>These are the C++ versions of <code>strtoX</code> and are defined by the standard to do the same except for throwing exceptions on errors. 
+The exclusion of <code>stoui</code> is discussed at <a href="https://wg21.link/lwg2270">LWG2270</a></p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird1.png" data-background-size="auto" data-background-position="5% 70%" -->
+
+<blockquote class="twitter-tweet tw-align-center" data-conversation="none"><p lang="en" dir="ltr">Never heard of std::stoi (looks like atoi, but for std::string, correct?). But yes, it should definitely be updated. <br>I have my own `int64_t Atoi64(StringView sv)` for this purpose, for example.</p>&mdash; Arvid Gerstmann (@ArvidGerstmann) <a href="https://twitter.com/ArvidGerstmann/status/1009369290326372353?ref_src=twsrc%5Etfw">June 20, 2018</a></blockquote>
+
+<aside class="notes"><p>The main downside of those methods is there not many people are aware of them. Even a well known C++ developer like Arvid only learned about it in 2018.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>sto<span style="color: #bee4fd">X</span>_to_string</code></h2>
+
+```cpp
+///hide
+#include <string>
+
+///unhide
+std::string addi(const std::string& lhs, const std::string& rhs) {
+  return std::to_string(std::stoi(lhs) + std::stoi(rhs));
+}
+
+std::string addd(const std::string& lhs, const std::string& rhs) {
+  return std::to_string(std::stod(lhs) + std::stod(rhs));
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+<aside class="notes"><p>this implementation is as elegant as it can get only that it&#39;s again not generic due to the C-like naming and the fact it&#39;s not customizable.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+```cpp [3-8|10-15]
+///hide
+#include <string>
+#include <iostream>
+#include <cassert>
+
+int main() {
+///unhide
+auto exception_count = 0;
+
+try {
+  const float f = std::stof("junk");
+} catch (const std::invalid_argument& ex) {
+  std::cerr << ex.what() << '\n';
+  ++exception_count;
+}
+
+try {
+  const int i = std::stoi("2147483648");
+} catch (const std::out_of_range& ex) {
+  std::cerr << ex.what() << '\n';
+  ++exception_count;
+}
+
+assert(exception_count == 2);
+///hide
+}
+```
+
+<aside class="notes"><p>the error handling is similar to IO streams with exceptions.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<h2><code>sto<span style="color: #bee4fd">X</span>_to_string</code></h2>
+
+- <!-- .element: class="pro" --> simple API
+- <!-- .element: class="pro" --> efficient assuming SSO
+- <!-- .element: class="pro" --> throws on error
+- <!-- .element: class="con" --> synchronizes on locale
+- <!-- .element: class="con" --> unknown end
+- <!-- .element: class="con" --> <code>to_string</code> not customizable
+  - precision
+  - format
+- <!-- .element: class="con" --> <code>sto<span style="color: #bee4fd">X</span></code> not generic
+
+<aside class="notes"><p>as we&#39;ll see later, those methods don&#39;t perform too bad even though they use <code>std::string</code> as they&#39;re able to take advantage of the small string optimization (22 chars in <code>libstdc++</code>)</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-auto-animate -->
+
+## ideal floating point conversion
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
+   sodipodi:docname="short_round_trip.svg"
+   id="svg5"
+   version="1.1"
+   viewBox="0 0 218.99367 45.452713"
+   height="45.452713mm"
+   width="218.99367mm"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#191919"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-grids="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.5091049"
+     inkscape:cx="384.6651"
+     inkscape:cy="128.88434"
+     inkscape:window-width="1858"
+     inkscape:window-height="1027"
+     inkscape:window-x="62"
+     inkscape:window-y="65"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="marker39841"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39839" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker39827"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39825" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker39821"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39819" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Mstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1295" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1292" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1289" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart4277"
+       inkscape:isstock="true"
+       id="Arrow1Mstart4277">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:#bee4fd;fill-rule:evenodd;stroke:#bee4fd;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40460" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart7382"
+       inkscape:isstock="true"
+       id="Arrow1Mstart7382">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:#bee4fd;fill-rule:evenodd;stroke:#bee4fd;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40463" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend2469"
+       inkscape:isstock="true"
+       id="Arrow1Lend2469">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40466" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart3988"
+       inkscape:isstock="true"
+       id="Arrow1Lstart3988">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40469" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(8.3109635,-110.1906)">
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.0968954px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 27,130 H 175"
+       id="path237" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 100,120 v 20 0"
+       id="path382" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 50,120 v 20 0"
+       id="path384" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 150,120 v 20 0"
+       id="path466" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.308504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Lstart3988)"
+       d="M 0,130 H 13"
+       id="path472" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.176213;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.70485, 0.70485;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 15,130 H 25"
+       id="path1557" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.176213;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.70485, 0.70485;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 177,130 h 12"
+       id="path1595" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.308504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Lend2469)"
+       d="m 191,130 h 13"
+       id="path1599" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="61.816235"
+       y="113.33873"
+       id="text6535"><tspan
+         sodipodi:role="line"
+         id="tspan6533"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="61.816235"
+         y="113.33873">0.100000001490116119384765625</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="12.970767"
+       y="145.78645"
+       id="text13117"><tspan
+         sodipodi:role="line"
+         id="tspan13115"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="12.970767"
+         y="145.78645">0.0999999940395355224609375</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="113.88501"
+       y="145.78645"
+       id="text20277"><tspan
+         sodipodi:role="line"
+         id="tspan20275"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="113.88501"
+         y="145.78645">0.10000000894069671630859375</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="-8.5745134"
+       y="131.34875"
+       id="text31919"><tspan
+         sodipodi:role="line"
+         id="tspan31917"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="-8.5745134"
+         y="131.34875">-inf</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="206.12485"
+       y="131.34875"
+       id="text33539"><tspan
+         sodipodi:role="line"
+         id="tspan33559"
+         x="206.12485"
+         y="131.34875">inf</tspan></text>
+    <g
+       id="g40619"
+       class="fragment">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#fdd7be;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 75,125 v 10 0"
+         id="path468" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#fdd7be;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 125,125 v 10 0"
+         id="path470" />
+      <text
+         xml:space="preserve"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="68.075356"
+         y="138.17496"
+         id="text34641"><tspan
+           sodipodi:role="line"
+           id="tspan34639"
+           style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+           x="68.075356"
+           y="138.17496">halfway</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="118.07536"
+         y="138.17496"
+         id="text37293"><tspan
+           sodipodi:role="line"
+           id="tspan37291"
+           style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+           x="118.07536"
+           y="138.17496">halfway</tspan></text>
+    </g>
+    <g
+       id="g40679"
+       class="fragment">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#bee4fd;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="83.193802"
+         y="155.57924"
+         id="text39683"><tspan
+           sodipodi:role="line"
+           id="tspan39703"
+           x="83.193802"
+           y="155.57924">0.100000001</tspan></text>
+      <path
+         style="fill:none;stroke:#bee4fd;stroke-width:0.265;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart7382)"
+         d="m 97.354165,131.11257 v 20 0"
+         id="path39777" />
+    </g>
+    <g
+       id="g40684"
+       class="fragment">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#bee4fd;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="75.666885"
+         y="120.18915"
+         id="text37729"><tspan
+           sodipodi:role="line"
+           id="tspan37895"
+           x="75.666885"
+           y="120.18915">0.1</tspan></text>
+      <path
+         style="fill:none;stroke:#bee4fd;stroke-width:0.265;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart4277)"
+         d="m 79.045485,128.83335 v -7 0"
+         id="path39805" />
+    </g>
+  </g>
+</svg>
+
+
+<aside class="notes"><p>as you know, not every real number is representable in the IEEE 745 standard used to represent floating points on most architectures. Let&#39;s say we&#39;re converting the number in the middle here to a string. the other numbers are the closest numbers which can be represented as floats.
+We could use a very long string to represent the number exactly, but actually any string representing a number which is closer to this numbers than its neighbors, like <code>0.100000001</code>, allows us to identify the input exactly. In this case, however, there&#39;s a shorter such string: <code>0.1</code>. So Ideally, we would like a conversion to return the shortest string which can be converted back to the input.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-auto-animate -->
+
+## ideal floating point conversion
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
+   sodipodi:docname="round_to_nearest.svg"
+   id="svg5"
+   version="1.1"
+   viewBox="0 0 218.99367 45.452713"
+   height="45.452713mm"
+   width="218.99367mm"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#191919"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-grids="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.5091049"
+     inkscape:cx="384.6651"
+     inkscape:cy="128.88434"
+     inkscape:window-width="1858"
+     inkscape:window-height="1027"
+     inkscape:window-x="62"
+     inkscape:window-y="65"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="marker39841"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39839" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker39827"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39825" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker39821"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path39819" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Mstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1295" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1292" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lstart"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1289" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart4277"
+       inkscape:isstock="true"
+       id="Arrow1Mstart4277">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:#bee4fd;fill-rule:evenodd;stroke:#bee4fd;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40460" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart7382"
+       inkscape:isstock="true"
+       id="Arrow1Mstart7382">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:#bee4fd;fill-rule:evenodd;stroke:#bee4fd;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40463" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend2469"
+       inkscape:isstock="true"
+       id="Arrow1Lend2469">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40466" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lstart3988"
+       inkscape:isstock="true"
+       id="Arrow1Lstart3988">
+      <path
+         transform="matrix(0.8,0,0,0.8,10,0)"
+         style="fill:#ffffff;fill-rule:evenodd;stroke:#ffffff;stroke-width:1pt;stroke-opacity:1.0;fill-opacity:1.0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path40469" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(8.3109635,-110.1906)">
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.0968954px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 27,130 H 175"
+       id="path237" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 100,120 v 20 0"
+       id="path382" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 50,120 v 20 0"
+       id="path384" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 150,120 v 20 0"
+       id="path466" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.308504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Lstart3988)"
+       d="M 0,130 H 13"
+       id="path472" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.176213;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.70485, 0.70485;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 15,130 H 25"
+       id="path1557" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.176213;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.70485, 0.70485;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 177,130 h 12"
+       id="path1595" />
+    <path
+       style="fill:none;stroke:#ffffff;stroke-width:0.308504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Lend2469)"
+       d="m 191,130 h 13"
+       id="path1599" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="77.532135"
+       y="114.73174"
+       id="text6535"><tspan
+         sodipodi:role="line"
+         id="tspan6533"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="77.532135"
+         y="114.73174">1662.212646484375</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="26.18442"
+       y="145.78645"
+       id="text13117"><tspan
+         sodipodi:role="line"
+         id="tspan13115"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="26.18442"
+         y="145.78645">1662.2125244140625</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="126.18442"
+       y="145.78645"
+       id="text20277"><tspan
+         sodipodi:role="line"
+         id="tspan20275"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="126.18442"
+         y="145.78645">1662.2127685546875</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="-8.5745134"
+       y="131.34875"
+       id="text31919"><tspan
+         sodipodi:role="line"
+         id="tspan31917"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="-8.5745134"
+         y="131.34875">-inf</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="206.12485"
+       y="131.34875"
+       id="text33539"><tspan
+         sodipodi:role="line"
+         id="tspan33559"
+         x="206.12485"
+         y="131.34875">inf</tspan></text>
+    <g
+       id="g40619">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#fdd7be;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 75,125 v 10 0"
+         id="path468" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#fdd7be;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 125,125 v 10 0"
+         id="path470" />
+      <text
+         xml:space="preserve"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="68.075356"
+         y="138.17496"
+         id="text34641"><tspan
+           sodipodi:role="line"
+           id="tspan34639"
+           style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+           x="68.075356"
+           y="138.17496">halfway</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+         x="118.07536"
+         y="138.17496"
+         id="text37293"><tspan
+           sodipodi:role="line"
+           id="tspan37291"
+           style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#fdd7be;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+           x="118.07536"
+           y="138.17496">halfway</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#bee4fd;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="99.326851"
+       y="144.70911"
+       id="text39683"><tspan
+         sodipodi:role="line"
+         id="tspan39703"
+         x="99.326851"
+         y="144.70911">1662.2127</tspan></text>
+    <path
+       style="fill:none;stroke:#bee4fd;stroke-width:0.175011;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart7382)"
+       d="m 111.02949,130.99343 v 8.72303 0"
+       id="path39777" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#bee4fd;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+       x="78.918022"
+       y="120.18915"
+       id="text37729"><tspan
+         sodipodi:role="line"
+         id="tspan37895"
+         x="78.918022"
+         y="120.18915">1662.2126</tspan></text>
+    <path
+       style="fill:none;stroke:#bee4fd;stroke-width:0.265;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart4277)"
+       d="m 90.639264,129.00867 v -7 0"
+       id="path39805" />
+  </g>
+</svg>
+
+
+<aside class="notes"><p>Sometimes there are two possible shortest strings in the range. In this case, an ideal conversion will return the one which is actually closer to the input (the one ending in 6 in this case).</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird2.png" data-background-size="auto" data-background-position="5% 20%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">&quot;They did not know &lt;charconv&gt; was impossible so they did it&quot;<br> ― Mark Twain</p>&mdash; Corentin (@Cor3ntin) <a href="https://twitter.com/Cor3ntin/status/1184750231130382341?ref_src=twsrc%5Etfw">October 17, 2019</a></blockquote>
+
+<aside class="notes"><p>The desire to have such &quot;ideal&quot; conversion which is also efficient was the reason C++17 added new methods, in the <code>charconv</code> header, for number ⟷ string conversions. As STL describes in his excellent CppCon talk, implementing those methods required a novel conversion algorithm only published after C++17 was finalized.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-auto-animate -->
+
+## `from_chars`
+
+```cpp
+///hide
+namespace std {
+  enum class chars_format {
+    general
+  };
+}
+
+struct from_chars_result;
+///unhide
+from_chars_result from_chars(const char* first, const char* last, char&               value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, signed char&        value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, unsigned char&      value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, short&              value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, unsigned short&     value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, int&                value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, unsigned int&       value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, long&               value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, unsigned long&      value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, long long&          value, int base = 10);
+from_chars_result from_chars(const char* first, const char* last, unsigned long long& value, int base = 10);
+
+from_chars_result from_chars(const char* first, const char* last, float& value,
+                             std::chars_format fmt = std::chars_format::general);
+from_chars_result from_chars(const char* first, const char* last, double& value,
+                             std::chars_format fmt = std::chars_format::general);
+from_chars_result from_chars(const char* first, const char* last, long double& value,
+                             std::chars_format fmt = std::chars_format::general);
+```
+
+<!-- .element: data-id="code" style="font-size: 0.3em" -->
+
+<aside class="notes"><p>finally we get overloads for all the numeric types</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-auto-animate -->
+
+## `from_chars`
+
+```cpp
+///hide
+#include <system_error>
+
+namespace std {
+  enum class chars_format {
+    general
+  };
+}
+///unhide
+struct from_chars_result {
+    const char* ptr;
+    std::errc ec;
+};
+
+template<typename Integral>
+from_chars_result 
+from_chars(const char* first, const char* last, 
+           Integral& value, 
+           int base = 10);
+
+template<typename FloatingPoint>
+from_chars_result 
+from_chars(const char* first, const char* last, 
+           FloatingPoint& value,
+           std::chars_format fmt = std::chars_format::general);
+```
+
+<!-- .element: data-id="code" style="font-size: 0.5em" -->
+
+<aside class="notes"><p>These functions convert from a contiguous range of characters to a number. The methods are allowed to be implemented as templates. They are customizable to a degree. The return value contains where parsing as ended and an error code. No exception is thrown.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `to_chars`
+
+```cpp [6-10|12-28]
+///hide
+#include <system_error>
+
+namespace std {
+  enum class chars_format;
+}
+///unhide
+struct to_chars_result {
+    char* ptr;
+    std::errc ec;
+};
+
+template<typename Integral>
+to_chars_result 
+to_chars(const char* first, const char* last, 
+         Integral value, 
+         int base = 10);
+
+template<typename FloatingPoint>
+to_chars_result 
+to_chars(const char* first, const char* last, 
+           FloatingPoint value);
+
+template<typename FloatingPoint>
+to_chars_result 
+to_chars(const char* first, const char* last, 
+         FloatingPoint value,
+         std::chars_format fmt);
+
+template<typename FloatingPoint>
+to_chars_result 
+to_chars(const char* first, const char* last, 
+         FloatingPoint value,
+         std::chars_format fmt,
+         int precision);
+```
+
+<!-- .element: style="font-size: 0.45em" -->
+
+<aside class="notes"><p>the opposite direction looks very similar. the overloads without a defined precision output the shortest recoverable string.
+The resulting string is not nul-terminated.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## <code><span style="color: #bee4fd">X</span>_chars</code>
+
+```cpp
+///hide
+#include <charconv>
+#include <string>
+
+///unhide
+template<typename T>
+std::string add(const std::string& lhs, const std::string& rhs) {
+  T l, r;
+  std::from_chars(lhs.data(), lhs.data() + lhs.size(), l);
+  std::from_chars(rhs.data(), rhs.data() + rhs.size(), r);
+
+  std::string res(std::numeric_limits<T>::digits10 + 1, 0);
+  const auto [end, _] =
+      std::to_chars(res.data(), res.data() + res.size(), l + r);
+  res.resize(end - res.data());
+  return res;
+}
+```
+
+<!-- .element: data-id="code" style="font-size: 0.5em" -->
+
+<aside class="notes"><p>this implementation is not very readable but is generic</p>
+<p><a href="https://wg21.link/p2007">p2007</a> proposes <code>string_view</code> interface</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+```cpp [2-7|10-15|18-23]
+///compiler=g111
+///options+=-std=c++17
+///hide
+#include <charconv>
+#include <iterator>
+#include <cassert>
+
+int main() {
+///unhide
+{
+  const char str[] = "junk";
+  double d;
+  const auto [ptr, ec] = 
+    std::from_chars(std::begin(str), std::end(str), d);
+  assert(ptr == str);
+  assert(ec == std::errc::invalid_argument);
+}
+{
+  const char str[] = "2147483648";
+  int i;
+  const auto [ptr, ec] = 
+    std::from_chars(std::begin(str), std::end(str), i);
+  assert(ptr == std::prev(std::end(str)));
+  assert(ec == std::errc::result_out_of_range);
+}
+{
+  int i = 12345678;
+  char str[7];
+  const auto [ptr, ec] = 
+    std::to_chars(std::begin(str), std::end(str), i);
+  assert(ptr == std::end(str));
+  assert(ec == std::errc::value_too_large);
+}
+///hide
+}
+```
+
+<aside class="notes"><p>in addition to the errors we&#39;ve previously seen, <code>to_chars</code> avoids buffer overflow and returns an error code instead.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## <code><span style="color: #bee4fd">X</span>_chars</code>
+
+- <!-- .element: class="pro" --> efficient
+- <!-- .element: class="pro" --> reports error code
+- <!-- .element: class="pro" --> customizable
+- <!-- .element: class="pro" --> generic
+- <!-- .element: class="con" --> manual memory management
+- <!-- .element: class="con" --> verbose
+- <!-- .element: class="con" --> less customizable
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird3.png" data-background-size="auto" data-background-position="85% 70%" -->
+
+<blockquote class="twitter-tweet" data-conversation="none" data-align="center"><p lang="en" dir="ltr">std::format(&quot;C:&quot;)</p>&mdash; Tamir Bahar (@tmr232) <a href="https://twitter.com/tmr232/status/1377571602569834497?ref_src=twsrc%5Etfw">April 1, 2021</a></blockquote>
+
+<aside class="notes"><p>the last C++ standard which came out in 2020, added <code>std::format</code> which doesn&#39;t format your hard drive (at least not intentionally) but is a new way for doing string formatting and hence number to string conversions.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `std::format`
+
+```cpp [1-2|4-6|8-11]
+///hide
+#include <string>
+#include <iterator>
+
+namespace std {
+template< class OutputIt >
+struct format_to_n_result {
+  OutputIt out;
+  std::iter_difference_t<OutputIt> size;
+};
+}
+
+template<typename...>
+using format_string = int;
+///unhide
+template< class... Args >
+std::string format( format_string<Args...> fmt, const Args&... args );
+
+template< class OutputIt, class... Args >
+OutputIt format_to( OutputIt out, 
+                    format_string<Args...> fmt, const Args&... args );
+
+template< class OutputIt, class... Args >
+std::format_to_n_result<OutputIt>
+format_to_n( OutputIt out, std::iter_difference_t<OutputIt> n,
+             format_string<Args...> fmt, const Args&... args );
+```
+
+<!-- .element: data-hide-line-numbers style="font-size: 0.45em" -->
+
+<aside class="notes"><p>the API reminds that for <code>sprintf</code> only type aware which means you can avoid the <code>d</code>, <code>f</code> etc. flags and the bugs that come from them.
+There&#39;s an overload for returning the result as a string, writing to an output iterator and writing to a sized range.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## separate locale overloads
+
+<pre>
+<code data-trim data-noescape class="lang-cpp">
+///hide
+#include &lt;string&gt;
+
+namespace std {
+template&lt; class OutputIt &gt;
+struct format_to_n_result {
+  OutputIt out;
+  std::iter_difference_t&lt;OutputIt&gt; size;
+};
+}
+
+template&lt;typename...&gt;
+using format_string = int;
+
+///unhide
+template&lt; class... Args &gt;
+std::string format( <mark>const std::locale& loc</mark>,
+                    format_string&lt;Args...&gt; fmt, const Args&... args );
+
+template&lt; class OutputIt, class... Args &gt;
+OutputIt format_to( OutputIt out, <mark>const std::locale& loc</mark>,
+                    format_string&lt;Args...&gt; fmt, const Args&... args );
+                    
+template&lt; class OutputIt, class... Args &gt;
+std::format_to_n_result&lt;OutputIt&gt;
+format_to_n( OutputIt out, std::iter_difference_t&lt;OutputIt&gt; n,
+             <mark>const std::locale& loc</mark>, 
+             format_string&lt;Args...&gt; fmt, const Args&... args );
+</code>
+</pre>
+
+<!-- .element: style="font-size: 0.45em" -->
+
+<aside class="notes"><p><code>std::format</code> is not locale aware by default. If you do want to use a locale, you can call one of these overloads.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+<!-- .slide: data-background-iframe="https://wg21.link/p1729" -->
+
+<aside class="notes"><p>there&#39;s a proposal for adding a similar API for text parsing which is currently available as <code>scnlib</code> on GitHub. I hope we&#39;ll be able to have it in C++23.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `scan` and `format`
+
+```cpp
+///libs=scnlib:04,fmt:713
+///hide
+#include <concepts>
+#include <string>
+#include <scn/scn.h>
+#include <fmt/format.h>
+
+namespace std {
+  template<typename... Args>
+  auto scan(Args&&... args) { return scn::scan(std::forward<Args>(args)...); }
+  template<typename... Args>
+  auto format(Args&&... args) { return fmt::format(std::forward<Args>(args)...); }
+}
+
+///unhide
+template<std::integral I>
+std::string add(const std::string& lhs, const std::string& rhs) {
+  I l, r;
+  std::scan(lhs, "{}", l);
+  std::scan(rhs, "{}", r);
+  return std::format("{}", l + r);
+}
+
+template<std::floating_point F>
+std::string add(const std::string& lhs, const std::string& rhs, 
+                int precision) {
+  F l, r;
+  std::scan(lhs, "{}", l);
+  std::scan(rhs, "{}", r);
+  return std::format("{:.{}}", l + r, precision);
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+Assuming [p1729](https://wg21.link/p1729) is accepted.
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>the format string syntax is similar to Python. we can&#39;t have a single generic implementation because <code>format</code> refuses to accept precision for integral arguments.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## generic with default precision
+
+```cpp
+///libs=scnlib:04,fmt:713
+///hide
+#include <concepts>
+#include <string>
+#include <scn/scn.h>
+#include <fmt/format.h>
+
+namespace std {
+  template<typename... Args>
+  auto scan(Args&&... args) { return scn::scan(std::forward<Args>(args)...); }
+  template<typename... Args>
+  auto format(Args&&... args) { return fmt::format(std::forward<Args>(args)...); }
+}
+
+///unhide
+template<typename T>
+requires std::is_arithmetic_v<T>
+std::string add(const std::string& lhs, const std::string& rhs) {
+  T l, r;
+  std::scan(lhs, "{}", l);
+  std::scan(rhs, "{}", r);
+  return std::format("{}", l + r);
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+Assuming [p1729](https://wg21.link/p1729) is accepted.
+
+<!-- .element: class="footnote" -->
+
+</script></section><section data-markdown><script type="text/template">
+## no output params
+
+```cpp [3-4,11-12]
+///libs=scnlib:04,fmt:713
+///hide
+#include <concepts>
+#include <string>
+#include <scn/scn.h>
+#include <fmt/format.h>
+
+///unhide
+template<std::integral I>
+std::string add(const std::string& lhs, const std::string& rhs) {
+  const auto l = scn::scan_value<I>(lhs);
+  const auto r = scn::scan_value<I>(rhs);
+  return fmt::format("{}", l + r);
+}
+
+template<std::floating_point F>
+std::string add(const std::string& lhs, const std::string& rhs, 
+                int precision) {
+  const auto l = scn::scan_value<F>(lhs);
+  const auto r = scn::scan_value<F>(rhs);
+  return fmt::format("{:.{}f}", l + r, precision);
+}
+```
+
+<!-- .element: data-hide-line-numbers style="font-size: 0.5em" -->
+
+\* not proposed
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>Personally, I much prefer not to use output params. This is possible with <code>scnlib</code> but currently not proposed for standardization.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## error handling
+
+```cpp [2-6|9-13|16-21]
+///libs=scnlib:04,fmt:713
+///hide
+#include <scn/scn.h>
+#include <fmt/format.h>
+#include <cassert>
+
+int main() {
+///unhide
+{
+    double d;
+    const auto res = scn::scan("junk", "{}", d);
+    assert(!res);
+    assert(res.error().code() == 
+      scn::error::code::invalid_scanned_value);
+}
+{
+    int i;
+    const auto res = scn::scan("2147483648", "{}", i);
+    assert(!res);
+    assert(res.error().code() == 
+      scn::error::code::value_out_of_range);
+}
+{
+  int i = 12345678;
+  char str[7];
+  // fmt::format_to(str, "{}", i); // UB
+  const auto [out, size] = fmt::format_to_n(str, std::size(str), "{}", i);
+  assert(out == std::end(str));
+  assert(size == 8);
+}
+///hide
+}
+```
+
+<aside class="notes"><p><code>scnlib</code> returns error code, similar to <code>from_chars</code>. You can get a buffer overflow with <code>format_to</code> so better use <code>format_to_n</code>, which will stop when the buffer is full, when dealing with char arrays.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `scan` and `format`
+
+- <!-- .element: class="pro" --> efficient
+- <!-- .element: class="pro" --> safe
+- <!-- .element: class="pro" --> ~generic
+- <!-- .element: class="con" --> somewhat verbose
+
+</script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird1.png" data-background-size="auto" data-background-position="85% 30%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">ILLEGAL BENCHMARKS SHOW THAT MY CODE IS SLOWER!</p>&mdash; 🤍❤️🤍 Flying Belarusian (@vzverovich) <a href="https://twitter.com/vzverovich/status/1324752016183234567?ref_src=twsrc%5Etfw">November 6, 2020</a></blockquote>
+
+<aside class="notes"><p>now it&#39;s time to compare the performance of all the functions we explored. The code for the benchmarks was taken from what Vladimir Zverovich, the author of <code>fmtlib</code> use for testing the performance if his library.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## random `double` ⟶ string
+
+[![double to string random](benchmarks/dtoa-random.png)](benchmarks/dtoa-random.cpp)
+
+by precision
+
+<aside class="notes"><p>we can see the improvement of avoiding string copies by calling <code>num_put</code> directly.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## random string ⟶ `double`
+
+[![string to double digit](benchmarks/atod-digit.png)](benchmarks/atod-digit.cpp)
+
+by digits
+
+</script></section><section data-markdown><script type="text/template">
+## random `int` ⟶ string
+
+[![int to string](benchmarks/itoa.png)](benchmarks/itoa.cpp)
+
+</script></section><section data-markdown><script type="text/template">
+## random string ⟶ `int`
+
+[![string to int](benchmarks/atoi.png)](benchmarks/atoi.cpp)
+
+</script></section></section><section  data-markdown><script type="text/template">
+### Number ⟷ String Conversions
+
+<div id="comparison">
+
+| | <code><span style="color: #bee4fd">X</span>to<span style="color: #fdd7be">Y</span></code> | <code>strto<span style="color: #bee4fd">X</span></code> | <code>s<span style="color: #bee4fd">X</span>f</code> | `string`<br>`stream` | <code>sto<span style="color: #bee4fd">X</span><br>to_string</code> | <code><span style="color: #bee4fd">X</span>_chars</code> | `scan`<br>`format` |
+|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| **standard** | `C89`<sup>[1](#comparison1)</sup> | `C89`<sup>[1](#comparison1)</sup> | `C89` | `C++98` | `C++11` | `C++17` | `C++20`<sup>[2](#comparison2)</sup>
+| **readability** | ![good](good.png) | ![neutral](neutral.png) | ![neutral](neutral.png) | ![bad](bad.png) | ![good](good.png) | ![neutral](neutral.png) | ![neutral](neutral.png) |
+| **customizability** | ![bad](bad.png) | ![good](good.png) | ![good](good.png) | ![good](good.png) | ![bad](bad.png) | ![good](good.png) | ![good](good.png) |
+| **safety** | ![bad](bad.png) | ![neutral](neutral.png) | ![neutral](neutral.png) | ![good](good.png) | ![good](good.png) | ![neutral](neutral.png) | ![good](good.png) |
+| **generality** | ![bad](bad.png) | ![bad](bad.png) | ![bad](bad.png) | ![good](good.png) | ![bad](bad.png) | ![good](good.png) | ![neutral](neutral.png) |
+| **efficiency**<sup>[3](#comparison3)</sup> | 1 | 2 | 3 | 12 | 2 | 1 | 2 |
+
+
+<div class="footnotes">
+
+1. <a name="comparison1"></a> string ⟶ number only
+2. <a name="comparison2"></a> number ⟶ string only
+3. <a name="comparison3"></a> lower is better
+
+</div>
+
+</div>
+
+</script></section><section  data-markdown><script type="text/template">
+<!-- .slide: data-background-image="conf.png" data-background-size="contain" data-background-color="white" -->
+
+<div class="r-stretch" style="display: flex; flex-direction: column;">
+
+<div style="flex: 1;"></div>
+
+
+<div style="flex: 2;">
+
+# Thanks <!-- .element: class="chapter" -->
+
+</div>
+
+<div style="flex: 3;">
+
+  - Support: [My wife!](https://www.facebook.com/profile.php?id=100063027950066)
+  - Tweets:
+    - [Victor Zverovich](https://twitter.com/vzverovich)
+    - [Corentin](https://twitter.com/Cor3ntin)
+    - [Vector of Bool](https://twitter.com/vector_of_bool)
+    - [Arvid Gerstmann](https://twitter.com/ArvidGerstmann)
+    - [Ólafur Waage](https://twitter.com/olafurw)
+    - [Tamir Bahar](https://twitter.com/tmr232)
+  - Birds: [Luc Latulippe](https://www.behance.net/luclatulippe/)
+
+<!-- .element: style="font-size: 0.8em;" -->
+
+</div>
+
+</script></section><section ><section data-markdown><script type="text/template">
+<h2><code><span style="color: #fdd7be">Y</span>cvt</code></h2>
+
+```c
+char * ecvt (double value, int ndigit, int *decpt, int *neg);
+char * fcvt (double value, int ndigit, int *decpt, int *neg);
+char * gcvt (double value, int ndigit, char *buf);
+
+char * qecvt (long double value, int ndigit, int *decpt, int *neg);
+char * qfcvt (long double value, int ndigit, int *decpt, int *neg);
+char * qgcvt (long double value, int ndigit, char *buf);
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+Source: [glibc](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_415.html#IDX2552)
+
+<!-- .element: class="footnote" -->
+
+<aside class="notes"><p>Those functions come from BSD Unix and are still available most C runtime libraries, including Microsoft CRT and <code>glibc</code>.</p>
+<p>The function <code>ecvt</code> converts the floating-point number value to a string with at most <code>ndigit</code> decimal digits with no decimal point or sign. Those are instead stored at <code>decpt</code> and <code>neg</code> (<code>*decpt</code> is set to the index in the string of the first digit after the decimal point. <code>*neg</code> is set to a nonzero value if value is negative, zero otherwise. If value is zero, it is implementation defined whether <code>*decpt</code> is 0 or 1).
+If <code>ndigit</code> decimal digits would exceed the precision of a double it is reduced to a system-specific value.</p>
+<p>The returned string is <strong>statically allocated</strong> and <em>overwritten by each call</em> to <code>ecvt</code>.</p>
+<p><code>fcvt</code> is like <code>ecvt</code>, but <code>ndigit</code> specifies the number of digits after the decimal point.</p>
+<p><code>gcvt</code> is functionally equivalent to <code>sprintf(buf, &quot;%*g&quot;, ndigit, value</code>. It is provided only for compatibility&#39;s sake.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `ecvt`
+
+```c
+#include <stdlib.h>
+///hide
+#include <assert.h>
+#include <string.h>
+///unhide
+
+///hide
+int main() {
+///unhide
+int d, n;
+char* first = ecvt(12.3, 5, &d, &n);
+assert(strcmp(first, "12300") == 0);
+assert(d == 2);
+assert(n == 0);
+
+char* second = ecvt(-12.3, 2, &d, &n);
+assert(second == first);
+assert(strcmp(second, "12") == 0);
+assert(d == 2);
+assert(n != 0);
+///hide
+}
+```
+
+![forbidden](forbidden.png)
+
+<!-- .element: class="fragment full_screen" -->
+
+<aside class="notes"><p>You better not use this function. Microsoft&#39;s CRT and glibc offer more secure overloads.</p>
+</div></aside></script></section></section><section ><section data-markdown><script type="text/template">
+## <code>std::num_<span style="color: #fdd7be">Y</span></code>
+
+```cpp [1-28|30-51]
+///hide
+template<typename charT>
+class istreambuf_iterator;
+
+template<typename charT>
+class ostreambuf_iterator;
+
+class locale {
+  class facet {};
+};
+
+class ios_base {
+  enum class iostate;
+};
+
+///unhide
+template <class charT, 
+          class InputIterator = istreambuf_iterator<charT>>
+class num_get : public locale::facet
+{
+public:
+///hide
+    using iter_type = InputIterator;
+///unhide
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, bool& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base& ,
+                  ios_base::iostate& err, long& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base& ,
+                  ios_base::iostate& err, long long& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, unsigned short& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, unsigned int& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, unsigned long& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base& ,
+                  ios_base::iostate& err, unsigned long long& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, float& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, double& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, long double& v) const;
+    iter_type get(iter_type in, iter_type end, ios_base&,
+                  ios_base::iostate& err, void*& v) const;
+};
+
+template <class CharT, 
+          class OutputIterator = ostreambuf_iterator<CharT>>
+class num_put : public locale::facet
+{
+public:
+///hide
+    using char_type = CharT;
+    using iter_type = OutputIterator;
+///unhide
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  bool v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  long v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  long long v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  unsigned long v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  unsigned long long v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  double v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  long double v) const;
+    iter_type put(iter_type s, ios_base& f, char_type fill,
+                  const void* v) const;
+};
+```
+
+<!-- .element: style="font-size: 0.45em" -->
+
+<aside class="notes"><p>like the C functions, IO streams use the current installed locale to convert to numbers and back. Specifically, they use <code>num_get</code> to convert a range of characters to the numeric values and <code>num_put</code> to write numeric values to an output range.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## <code>std::num_<span style="color: #fdd7be">Y</span></code>
+
+```cpp [4-14| 16-25]
+///hide
+#include <sstream>
+#include <iomanip>
+
+///unhide
+template <typename T = double>
+std::string add(const std::string& lhs, const std::string& rhs, 
+                std::streamsize precision = std::stringstream{}.precision()) {
+  auto read = [](std::istream& sst, T& d) {
+    std::ios_base::iostate err = std::ios_base::goodbit;
+    typename std::istream::sentry s(sst);
+    std::use_facet<std::num_get<char>>(sst.getloc()).get(sst, {}, sst, err, d);
+  };
+
+  T l, r;
+  std::istringstream in{lhs};  
+  read(in, l);
+  in.str(rhs);
+  read(in, r);
+
+  auto write = [](std::ostream& sst, T d) {
+    typename std::ostream::sentry s(sst);
+    std::use_facet<std::num_put<char>>(sst.getloc()).put(sst, sst, sst.fill(), d);
+  };
+
+  std::ostringstream out;
+  out << std::setprecision(static_cast<int>(precision)) << std::fixed;
+  write(out, l + r);
+  return out.str();
+}
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>here is the same code as before only this time we call <code>num_get</code> and <code>num_put</code> ourselves, the way that <code>stringstream</code> operators call them.
+The job of <code>sentry</code> is to check if the stream is valid and set error flags if it is not.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## avoid copying
+
+```cpp [4-14|16-27]
+///hide
+#include <sstream>
+#include <iomanip>
+
+///unhide
+template <typename T = double>
+std::string add(const std::string& lhs, const std::string& rhs, 
+                std::streamsize precision = std::stringstream{}.precision()) {
+  auto read = []<typename It>(It from, It to, T& d) {
+    std::ios_base::iostate err = std::ios_base::goodbit;
+    std::istringstream sst;
+    using Facet = std::num_get<char, It>;
+    std::locale loc{sst.getloc(), new Facet};
+    std::use_facet<Facet>(loc).get(from, to, sst, err, d);
+  };
+
+  T l, r;
+  read(lhs.begin(), lhs.end(), l);
+  read(rhs.begin(), rhs.end(), r);
+
+  auto write = [precision]<typename It>(It out, T d) {
+    std::ostringstream sst;  
+    sst << std::setprecision(static_cast<int>(precision)) << std::fixed;
+    using Facet = std::num_put<char, It>;
+    std::locale loc{sst.getloc(), new Facet};
+    std::use_facet<Facet>(loc).put(out, sst, sst.fill(), d);
+  };
+
+  std::string res;
+  write(std::back_inserter(res), l + r);
+  return res;
+}
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>the generic interface of <code>num_X</code> allows us, however, to avoid copying strings to and from the streams by passing their iterators directly to the facets.
+We need to use a new locale aware of this non standard iterator type however.</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template">
+<!-- .slide: data-background-image="bird2.png" data-background-size="auto" data-background-position="15% 20%" -->
+
+<blockquote class="twitter-tweet" data-align="center"><p lang="en" dir="ltr">Will boost turn into boost spirit after death? <a href="https://twitter.com/hashtag/cplusplus?src=hash&amp;ref_src=twsrc%5Etfw">#cplusplus</a></p>&mdash; 🤍❤️🤍 std::easily_ignorable (@vzverovich) <a href="https://twitter.com/vzverovich/status/1322579917574492167?ref_src=twsrc%5Etfw">October 31, 2020</a></blockquote>
+
+<aside class="notes"><p>during the &quot;dark ages&quot; of C++, between C++98 and C++11, most of the innovation was happening as part of the boost libraries and no wonder it also included more methods for number ⟷ string conversions.</p>
+</aside></script></section><section data-markdown><script type="text/template">
+## `boost::lexical_cast`
+
+```cpp
+///libs=boost:176
+///hide
+#include <string_view>
+#include <string>
+///unhide
+#include <boost/lexical_cast.hpp>
+
+template <typename T>
+std::string add(std::string_view lhs, std::string_view rhs) {
+  const auto l = boost::lexical_cast<T>(lhs);
+  const auto r = boost::lexical_cast<T>(rhs);
+  return boost::lexical_cast<std::string>(l + r);
+}
+```
+
+<aside class="notes"><ul>
+<li>from January 2001</li>
+<li>supports C++03</li>
+<li>can cast any type with stream operators</li>
+<li>is not customizable</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+## `boost::format`
+
+```cpp
+///libs=boost:176
+///hide
+#include <string_view>
+#include <string>
+#include <boost/lexical_cast.hpp>
+///unhide
+#include <boost/format.hpp>
+
+std::string add(std::string_view lhs, std::string_view rhs) {
+  const auto l = boost::lexical_cast<double>(lhs);
+  const auto r = boost::lexical_cast<double>(rhs);
+  return (boost::format("%.17f") % (l + r)).str();
+}
+```
+
+<aside class="notes"><ul>
+<li>from October 2002</li>
+<li>supports C++03</li>
+<li>number ⟶ string only</li>
+<li><code>printf</code>-like format string</li>
+<li>doesn&#39;t support dynamic precision</li>
+<li>not generic</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+## `boost::spirit`
+
+```cpp [14-25|27-36]
+///libs=boost:176
+///hide
+#include <string_view>
+#include <string>
+///unhide
+#include <boost/spirit/include/karma.hpp>
+#include <boost/spirit/include/qi.hpp>
+
+template <typename Num>
+struct precision_policy : boost::spirit::karma::real_policies<Num> {
+  precision_policy(int precision) : precision_{precision} {}
+  unsigned precision(Num /*n*/) const { return precision_; }
+  int precision_;
+};
+
+template <typename T = double>
+std::string add(std::string_view lhs, std::string_view rhs, 
+                int precision) {
+  const auto parse_double = [](std::string_view str, double& d) {
+    namespace qi = boost::spirit::qi;
+
+    using qi::double_;
+
+    const auto action = [&d](double v) { d = v; };
+    qi::parse(str.begin(), str.end(), double_[action]);
+  };
+
+  double l, r;
+  parse_double(lhs, l);
+  parse_double(rhs, r);
+
+  namespace karma = boost::spirit::karma;
+  using karma::double_;
+  using precision_double_ =
+      karma::real_generator<double, precision_policy<double>>;
+
+  std::string res;
+  karma::generate(std::back_inserter(res), 
+                  precision_double_{precision}, 
+                  l + r);
+  return res;
+}
+```
+
+<!-- .element: style="font-size: 0.45em" -->
+
+<aside class="notes"><ul>
+<li>from March 2003</li>
+<li>supports C++03</li>
+<li>quite a lot of ceremony</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template">
+## `boost::convert`
+
+```cpp [8-26|28-32]
+///libs=boost:176
+///hide
+#include <string_view>
+#include <string>
+///unhide
+#include <boost/convert.hpp>
+#include <boost/convert/lexical_cast.hpp>
+#include <boost/convert/printf.hpp>
+#include <boost/convert/spirit.hpp>
+#include <boost/convert/stream.hpp>
+#include <boost/convert/strtol.hpp>
+
+template <typename Converter>
+struct convert {
+  template <typename T = double>
+  static std::string add(std::string_view lhs, std::string_view rhs,
+                         int precision) {
+    Converter ccnv;
+    namespace arg = boost::cnv::parameter;
+
+    const auto l = boost::convert<T>(lhs, ccnv).value();
+    const auto r = boost::convert<T>(rhs, ccnv).value();
+    if constexpr (std::is_invocable_v<Converter, decltype(arg::precision)>) {
+      return boost::convert<std::string>(l + r,
+                                         ccnv(arg::precision = precision))
+          .value();
+    } else {
+      return boost::convert<std::string>(l + r, ccnv).value();
+    }
+  }
+};
+
+using strtol_cnv        = convert<boost::cnv::strtol>;
+using printf_cnv        = convert<boost::cnv::printf>;
+using cstream_cnv       = convert<boost::cnv::cstream>;
+using lexical_cast_cnv  = convert<boost::cnv::lexical_cast>;
+using spirit_cnv        = convert<boost::cnv::spirit>;
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>this is the newest library, added in 2015 and it offers a generic interface for some of the methods we&#39;ve discussed today. It&#39;s possible to plug in a custom conversion back end as well.</p>
+</aside></script></section></section><section  data-markdown><script type="text/template">
+## FP conversion verification
+
+```cpp [362-372|74-113|47-72]
+///libs=scn:04,fmt:713,boost:176
+///fails=found ':' in nested-name-specifier
+#include <fmt/format.h>
+#include <scn/scn.h>
+
+#include <boost/spirit/include/karma.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <cassert>
+#include <charconv>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <iomanip>
+#include <numbers>
+#include <random>
+#include <sstream>
+#include <string_view>
+
+constexpr int DEFAULT_PRECISION = 17;
+
+constexpr int BUF_SIZE =
+    1 /*'-'*/ +
+    (std::numeric_limits<double>::max_exponent10 + 1) /*exponent+1 digits*/
+    + 1 /*'.'*/ + DEFAULT_PRECISION /* precision*/ + 1 /*terminating null*/;
+
+template <typename Format, typename... Args>
+void error(Format &&format, Args &&...args) {
+  throw std::runtime_error(
+      fmt::format(format, std::forward<Args>(args)...));
+}
+
+template <typename T>
+class Rng {
+ public:
+  explicit Rng(unsigned seed = 0) : gen_{seed} {}
+
+  T operator()() { return dist_(gen_); }
+
+ private:
+  std::mt19937 gen_;
+  using dist = std::conditional_t<std::is_integral_v<T>,
+                                  std::uniform_int_distribution<T>,
+                                  std::uniform_real_distribution<T>>;
+  dist dist_;
+};
+
+template <typename Method>
+static size_t verifyValue(double value, Method method,
+                          const std::string_view expect = "") {
+  auto str = method(value);
+
+  if (not expect.empty() && str != expect) {
+    error("Error: expect {} but actual {}", expect, str);
+  }
+
+  auto [roundtrip, processed] = method(str);
+
+  if (processed < 0) {
+    return 0;
+  }
+
+  if (str.size() != static_cast<size_t>(processed)) {
+    error("Error: some extra character {} -> '{}'", value, str);
+  }
+
+  if (value != roundtrip) {
+    error("Error: roundtrip fail {:.17g} -> '{}' -> {:.17g}", value, str,
+          roundtrip);
+  }
+
+  return str.size();
+}
+
+template <typename Method>
+static void verify(const std::string_view fname, Method method) try {
+  fmt::print("Verifying {:20} ... ", fname);
+
+  // Boundary and simple cases
+  verifyValue(0, method);
+  verifyValue(0.1, method, "0.1");
+  verifyValue(0.12, method, "0.12");
+  verifyValue(0.123, method, "0.123");
+  verifyValue(0.1234, method, "0.1234");
+  verifyValue(1.2345, method, "1.2345");
+  verifyValue(1.0 / 3.0, method);
+  verifyValue(2.0 / 3.0, method);
+  verifyValue(10.0 / 3.0, method);
+  verifyValue(20.0 / 3.0, method);
+  verifyValue(std::numeric_limits<double>::min(), method);
+  verifyValue(std::numeric_limits<double>::max(), method);
+  verifyValue(std::numeric_limits<double>::denorm_min(), method);
+
+  Rng<double> r;
+
+  constexpr unsigned kVerifyRandomCount = 100000;
+
+  uint64_t lenSum = 0;
+  size_t lenMax = 0;
+  for (unsigned i = 0; i < kVerifyRandomCount; i++) {
+    double d;
+    do {
+      d = r();
+    } while (std::isnan(d) || std::isinf(d));
+    size_t len = verifyValue(d, method);
+    lenSum += len;
+    lenMax = std::max(lenMax, len);
+  }
+
+  double lenAvg = double(lenSum) / kVerifyRandomCount;
+  fmt::print("OK. Length Avg = {:2.3f}, Max = {}\n", lenAvg, lenMax);
+} catch (const std::exception &ex) {
+  fmt::print("{}\n", ex.what());
+}
+
+// parse the 2 strings as numbers, add the numbers and return the result as a
+// string String add(String lhs, String rhs);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wconversion"
+
+// https://github.com/dspinellis/unix-history-repo/blob/Research-V6/usr/source/iolib/ftoa.c
+void ftoa(double x, char *str, int prec, int format) {
+  /* converts a floating point number to an ascii string */
+  /* x is stored into str, which should be at least 30 chars long */
+  int ie, i, k, ndig, fstyle;
+  double y;
+  // if (nargs() != 7)
+  //   IEHzap("ftoa  ");
+  ndig = (prec <= 0) ? 7 : (prec > 22 ? 23 : prec + 1);
+  if (format == 'f' || format == 'F')
+    fstyle = 1;
+  else
+    fstyle = 0;
+  /* print in e format unless last arg is 'f' */
+  ie = 0;
+  /* if x negative, write minus and reverse */
+  if (x < 0) {
+    *str++ = '-';
+    x = -x;
+  }
+
+  /* put x in range 1 <= x < 10 */
+  if (x > 0.0)
+    while (x < 1.0) {
+      x *= 10.0;
+      ie--;
+    }
+  while (x >= 10.0) {
+    x = x / 10.0;
+    ie++;
+  }
+
+  /* in f format, number of digits is related to size */
+  if (fstyle) ndig += ie;
+
+  /* round. x is between 1 and 10 and ndig will be printed to
+     right of decimal point so rounding is ... */
+  for (y = i = 1; i < ndig; i++) y = y / 10.;
+  x += y / 2.;
+  if (x >= 10.0) {
+    x = 1.0;
+    ie++;
+  } /* repair rounding disasters */
+  /* now loop.  put out a digit (obtain by multiplying by
+    10, truncating, subtracting) until enough digits out */
+  /* if fstyle, and leading zeros, they go out special */
+  if (fstyle && ie < 0) {
+    *str++ = '0';
+    *str++ = '.';
+    if (ndig < 0) ie = ie - ndig; /* limit zeros if underflow */
+    for (i = -1; i > ie; i--) *str++ = '0';
+  }
+  for (i = 0; i < ndig; i++) {
+    k = x;
+    *str++ = k + '0';
+    if (i == (fstyle ? ie : 0)) /* where is decimal point */
+      *str++ = '.';
+    x -= (y = k);
+    x *= 10.0;
+  }
+
+  /* now, in estyle,  put out exponent if not zero */
+  if (!fstyle && ie != 0) {
+    *str++ = 'E';
+    if (ie < 0) {
+      ie = -ie;
+      *str++ = '-';
+    }
+    for (k = 100; k > ie; k /= 10)
+      ;
+    for (; k > 0; k /= 10) {
+      *str++ = ie / k + '0';
+      ie = ie % k;
+    }
+  }
+  *str = '\0';
+  return;
+}
+
+#pragma GCC diagnostic pop
+
+struct to_double_res {
+  double res = 0;
+  ptrdiff_t processed;
+};
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    return {std::atof(str.c_str()), static_cast<ptrdiff_t>(str.size())};
+  }
+
+  std::string operator()(const double d) const {
+    char buf[BUF_SIZE];
+    ftoa(d, buf, DEFAULT_PRECISION, 'f');
+    return buf;
+  }
+} XtoY;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    char *end;
+    auto res = std::strtod(str.c_str(), &end);
+    return {res, errno != 0 ? -1 : (end - str.c_str())};
+  }
+
+  std::string operator()(const double d) const {
+    char buf[BUF_SIZE];
+    gcvt(d, DEFAULT_PRECISION, buf);
+    return buf;
+  }
+} strtoX_gcvt;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    double res = 0;
+    ptrdiff_t processed = -1;
+    std::sscanf(str.c_str(), "%lf%tn", &res, &processed);
+    return {res, processed};
+  }
+
+  std::string operator()(const double d) const {
+    char buf[BUF_SIZE];
+    std::sprintf(buf, "%g", d);
+    return buf;
+  }
+} sXf;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    std::istringstream in{str};
+    double res = 0;
+    in >> res;
+    auto processed = [&]() -> ptrdiff_t {
+      if (in.eof()) {
+        return std::ssize(str);
+      }
+      return in.tellg();
+    }();
+    return {res, processed};
+  }
+
+  std::string operator()(const double d) const {
+    std::ostringstream out;
+    out << std::defaultfloat << d;
+    return out.str();
+  }
+} stringstream;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    std::ios_base::iostate err = std::ios_base::goodbit;
+    std::istringstream sst;
+    using Facet = std::num_get<char, std::string::const_iterator>;
+    static std::locale loc{std::locale::classic(), new Facet};
+    double res = 0;
+    auto end =
+        std::use_facet<Facet>(loc).get(str.begin(), str.end(), sst, err, res);
+    return {res, (err & std::ios_base::failbit) ? -1 : (end - str.begin())};
+  }
+
+  std::string operator()(const double d) const {
+    std::ostringstream sst;
+    sst << std::defaultfloat;
+    std::string res;
+    res.reserve(BUF_SIZE);
+    using Facet = std::num_put<char, decltype(std::back_inserter(res))>;
+    std::locale loc{sst.getloc(), new Facet};
+    std::use_facet<Facet>(loc).put(std::back_inserter(res), sst, sst.fill(), d);
+    return res;
+  }
+} num_X;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    return {std::stod(str), static_cast<ptrdiff_t>(str.size())};
+  }
+
+  std::string operator()(const double d) const { return std::to_string(d); }
+} stoX_to_string;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    double res = 0;
+    const auto [end, ec] =
+        std::from_chars(str.data(), str.data() + str.size(), res);
+    return {res, std::error_condition{ec} ? -1 : (end - str.data())};
+  }
+
+  std::string operator()(const double d) const {
+    std::string res(BUF_SIZE, 0);
+    const auto [end, _] = std::to_chars(res.data(), res.data() + res.size(), d);
+    res.resize(static_cast<size_t>(end - res.data()));
+    return res;
+  }
+} X_chars;
+
+[[maybe_unused]] struct {
+  to_double_res operator()(const std::string &str) const {
+    double res = 0;
+    auto scan_result = scn::scan(str, "{}", res);
+    return {res, !scan_result ? -1 : (scan_result.begin() - str.data())};
+  }
+
+  std::string operator()(const double d) const { return fmt::format("{}", d); }
+} scan_format;
+
+[[maybe_unused]] struct {
+  template <typename Num>
+  struct precision_policy : boost::spirit::karma::real_policies<Num>
+  {
+    precision_policy(unsigned precision) : precision_{precision} {}
+    unsigned precision(Num /*n*/) const { return precision_; }
+    unsigned precision_;
+  };
+
+  to_double_res operator()(const std::string &str) const {
+    namespace qi = boost::spirit::qi;
+
+    using boost::phoenix::ref;
+    using qi::_1;
+    using qi::double_;
+
+    double res = 0;
+    auto first = str.begin();
+    auto success = qi::parse(first, str.end(), double_[ref(res) = _1]);
+    return { res, !success ? -1 : first - str.begin() };
+  }
+
+  std::string operator()(const double d) const {
+    namespace karma = boost::spirit::karma;
+    using karma::double_;
+
+    std::string res;
+    using precision_double_ =
+        karma::real_generator<double, precision_policy<double>>;
+    karma::generate(std::back_inserter(res), precision_double_{DEFAULT_PRECISION}, d);
+    return res;
+  }
+} qi_karma;
+
+int main() {
+  verify("XtoY", XtoY);
+  verify("strtoX_gcvt", strtoX_gcvt);
+  verify("sXf", sXf);
+  verify("stringstream", stringstream);
+  verify("num_X", num_X);
+  verify("stoX_to_string", stoX_to_string);
+  verify("X_chars", X_chars);
+  verify("scan_format", scan_format);
+  verify("qi_karma", qi_karma);
+}
+
+```
+
+<!-- .element: style="font-size: 0.4em" -->
+
+<aside class="notes"><p>this is a program to test</p>
+</aside></script></section></div>
+    </div>
+
+    <script src="./../dist/reveal.js"></script>
+
+    <script src="./../plugin/markdown/markdown.js"></script>
+    <script src="./../plugin/highlight/highlight.js"></script>
+    <script src="./../plugin/zoom/zoom.js"></script>
+    <script src="./../plugin/notes/notes.js"></script>
+    <script src="./../plugin/math/math.js"></script>
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath
+        ]
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"compilerExplorer":{"useLocal":true,"compiler":"g111","options":"-std=c++20 -O2 -march=haswell -Wall -Wextra -pedantic -Wno-unused-variable -Wno-unused-parameter"},"highlight":{"highlightOnLoad":true},"math":{"mathjax":"/_assets/node_modules/mathjax/MathJax.js"}}, queryOptions);
+    </script>
+
+    <script src="./../_assets/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="./../_assets/scripts/customize.js"></script>
+    <script src="./../_assets/node_modules/reveal-compiler-explorer/dist/reveal-compiler-explorer.js"></script>
+    <script src="./../_assets/scripts/load-plugins.js"></script>
+    <script src="./../_assets/scripts/twitter-widgets.js"></script>
+    <script src="./../_assets/scripts/custom-options.js"></script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+</html>
