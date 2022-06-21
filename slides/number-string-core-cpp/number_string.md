@@ -1,11 +1,4 @@
 ---
-scripts:
-  - node_modules/jquery/dist/jquery.min.js
-  - scripts/customize.js
-  - node_modules/reveal-compiler-explorer/dist/reveal-compiler-explorer.js
-  - scripts/load-plugins.js
-  - scripts/twitter-widgets.js
-  - scripts/custom-options.js
 css:
   - node_modules/github-fork-ribbon-css/gh-fork-ribbon.css
   - css/custom.css
