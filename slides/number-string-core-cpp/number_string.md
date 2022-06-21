@@ -10,7 +10,7 @@ css:
   - node_modules/github-fork-ribbon-css/gh-fork-ribbon.css
   - css/custom.css
   - css/animations.css
-  - slides/number-string/number-string.css
+  - slides/number-string-core-cpp/number-string.css
 revealOptions:
   compilerExplorer:
     useLocal: true
@@ -901,7 +901,7 @@ Note: as we'll see later, those methods don't perform too bad even though they u
 
 ## ideal floating point conversion
 
-FILE: number-string/short_round_trip.svg
+FILE: number-string-core-cpp/short_round_trip.svg
 
 Note: as you know, not every real number is representable in the IEEE 745 standard used to represent floating points on most architectures. Let's say we're converting the number in the middle here to a string. the other numbers are the closest numbers which can be represented as floats.
 We could use a very long string to represent the number exactly, but actually any string representing a number which is closer to this numbers than its neighbors, like `0.100000001`, allows us to identify the input exactly. In this case, however, there's a shorter such string: `0.1`. So Ideally, we would like a conversion to return the shortest string which can be converted back to the input.
@@ -912,7 +912,7 @@ We could use a very long string to represent the number exactly, but actually an
 
 ## ideal floating point conversion
 
-FILE: number-string/round_to_nearest.svg
+FILE: number-string-core-cpp/round_to_nearest.svg
 
 Note: Sometimes there are two possible shortest strings in the range. In this case, an ideal conversion will return the one which is actually closer to the input (the one ending in 6 in this case).
 
@@ -1910,7 +1910,7 @@ Note: this is the newest library, added in 2015 and it offers a generic interfac
 ```cpp [362-372|74-113|47-72]
 ///libs=scn:04,fmt:713,boost:176
 ///fails=found ':' in nested-name-specifier
-FILE: number-string/examples/verify.cpp
+FILE: number-string-core-cpp/examples/verify.cpp
 ```
 
 <!-- .element: style="font-size: 0.4em" -->
