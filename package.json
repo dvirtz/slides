@@ -27,13 +27,16 @@
     "filehound": "^1.17.4",
     "github-fork-ribbon-css": "^0.2.3",
     "jquery": "^3.6.0",
-    "mocha": "^9.0.1",
-    "reveal-test": "^2.1.2"
+    "mocha": "^10.0.0",
+    "reveal-test": "^3.0.0"
   },
   "dependencies": {
     "mathjax": "~2.7.4",
-    "reveal-compiler-explorer": "^1.6.1",
-    "reveal-md": "^5.1.2"
+    "reveal-compiler-explorer": "^3.0.0",
+    "reveal-md": "^5.3.4",
+    "reveal-pdf": "^1.0.1",
+    "reveal-timeline": "^1.2.1",
+    "timelinejs": "^2.35.6"
   },
   "homepage": "https://github.com/dvirtz/modern-cpp#readme"
 }

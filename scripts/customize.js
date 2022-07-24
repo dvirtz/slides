@@ -42,6 +42,9 @@ Reveal.on('ready', (event) => {
   });
   // move quote cites right
   $('blockquote p:has(cite)').css('float', 'right');
+  $('p.caption').has('img').replaceWith(function () {
+    return `<figure class="${$(this).attr('class')}" style="${$(this).attr('style')}"> ${$(this).html()} <figcaption>${$(this).children().prop('alt')}</figcaption> </figure>`
+  });
   Reveal.sync();
 });
 

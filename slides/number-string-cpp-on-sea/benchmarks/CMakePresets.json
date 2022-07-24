@@ -1,0 +1,33 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 15,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "'default' config",
+            "description": "'default' configure using 'Visual Studio 16 2019' generator",
+            "generator": "Visual Studio 16 2019",
+            "cacheVariables": {
+                "CMAKE_POLICY_DEFAULT_CMP0091": "NEW"
+            },
+            "toolchainFile": "C:\\Users\\dviry\\GitHub\\slides\\slides\\number-string-cpp-on-sea\\benchmarks\\build\\conan_toolchain.cmake"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "default",
+            "configuration": "Release"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "default",
+            "configuration": "Debug"
+        }
+    ],
+    "testPresets": []
+}
