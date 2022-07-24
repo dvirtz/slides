@@ -136,6 +136,10 @@ table.no-header thead {
 	width    : auto;
 }
 
+.reveal div.split p {
+	margin   : 0px;
+}
+
 .split.index {
 	column-count: 4;
 	font-size   : 0.3em;
