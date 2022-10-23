@@ -5,4 +5,6 @@
 - CI your presentations for fun and profit
   - [July 2021, C++ on Sea](presentation-ci-cpp-on-sea/presentation_ci.md)
   - [August 2021, Core C++](presentation-ci-core-cpp/presentation_ci.md)
-- [Number ⟷ String conversions](number-string-core-cpp/number_string.md), August 2021, Core C++
+- Number ⟷ String conversions
+  - [August 2021, Core C++](number-string-core-cpp/number_string.md)
+  - [July 2022, C++ On Sea](number-string-cpp-on-sea/number_string.md)

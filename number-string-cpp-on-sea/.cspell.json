@@ -1,0 +1,30 @@
+{
+  "words": [
+    "haswell",
+    "Wextra",
+    "Ritchie",
+    "Kernighan",
+    "customizability",
+    "Zverovich",
+    "Thomposon",
+    "Lesk",
+    "Jens",
+    "Maurer",
+    "Kosunen",
+    "Kevlin",
+    "Henney",
+    "Krempp",
+    "Batov",
+    "constructability"
+  ],
+  "languageSettings": [
+    {
+      "languageId": "markdown",
+      "ignoreRegExpList": [
+        "<blockquote[\\s\\S]+?</blockquote>", // twitter
+        "<code[\\s\\S]+?</code>", // code block
+        "data-pdf-src=\".*\"", // pdf path
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>reveal-md</title>
+    <link rel="shortcut icon" href="./../../../favicon.ico" />
+    <link rel="stylesheet" href="./../../../dist/reset.css" />
+    <link rel="stylesheet" href="./../../../dist/reveal.css" />
+    <link rel="stylesheet" href="./../../../dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="./../../../css/highlight/atom-one-dark.css" />
+
+    <link rel="stylesheet" href="./../../../_assets/node_modules/github-fork-ribbon-css/gh-fork-ribbon.css" />
+    <link rel="stylesheet" href="./../../../_assets/css/custom.css" />
+    <link rel="stylesheet" href="./../../../_assets/css/animations.css" />
+
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template"># google_benchmark_plot
+
+A python script to visualize the output from [google-benchmark][1]
+
+Here is a 2 minute demo:
+
+![2 minute demo](https://i.imgur.com/rEYqrWp.gif)
+
+## Using the script
+
+**If you are feeling lucky, try**
+```
+./your_benchmark_exe --benchmark_format=csv | python plot.py
+```
+
+### Detailed instructions
+
+* Clone the repository
+* Run `pip install -r requirements.txt` (works with both python 2 and 3)
+* Obtain the benchmark results as a csv, this is done by running your benchmark as
+
+```
+./your_benchmark_exe --benchmark_format=csv > benchmark.csv
+```
+
+* Pass the csv file to this script
+
+```
+python plot.py -f benchmark.csv
+```
+
+### What else does it do
+
+The script allows you to customize the plot using command line flags. The
+complete help text can be seen by calling
+
+```
+$ python plot.py -h
+
+usage: plot.py [-h] [-f FILE] [-m METRIC] [-t TRANSFORM] [-r RELATIVE_TO]
+               [--xlabel XLABEL] [--ylabel YLABEL] [--title TITLE] [--logx]
+               [--logy]
+
+Visualize google-benchmark output
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -f FILE          path to file containing the csv or json benchmark data
+  -m METRIC        metric to plot on the y-axis, valid choices are: real_time,
+                   cpu_time, bytes_per_second, items_per_second
+  -t TRANSFORM     transform to apply to the chosen metric, valid choices are:
+                   inverse
+  -r RELATIVE_TO   plot metrics relative to this label
+  --xlabel XLABEL  label of the x-axis
+  --ylabel YLABEL  label of the y-axis
+  --title TITLE    title of the plot
+  --logx           plot x-axis on a logarithmic scale
+  --logy           plot y-axis on a logarithmic scale
+  --output         File in which to save the graph
+```
+
+[1]: https://github.com/google/benchmark
+</script></section></div>
+    </div>
+
+    <script src="./../../../dist/reveal.js"></script>
+
+    <script src="./../../../plugin/markdown/markdown.js"></script>
+    <script src="./../../../plugin/highlight/highlight.js"></script>
+    <script src="./../../../plugin/zoom/zoom.js"></script>
+    <script src="./../../../plugin/notes/notes.js"></script>
+    <script src="./../../../plugin/math/math.js"></script>
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath
+        ]
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"highlight":{"highlightOnLoad":true},"compilerExplorer":{"useLocal":false,"compiler":"g102"},"math":{"mathjax":"/_assets/node_modules/mathjax/MathJax.js"}}, queryOptions);
+    </script>
+
+    <script src="./../../../_assets/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="./../../../_assets/scripts/customize.js"></script>
+    <script src="./../../../_assets/node_modules/reveal-compiler-explorer/dist/reveal-compiler-explorer.js"></script>
+    <script src="./../../../_assets/plugins/embed-tweet/plugin.js"></script>
+    <script src="./../../../_assets/scripts/load-plugins.js"></script>
+    <script src="./../../../_assets/scripts/custom-options.js"></script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+</html>
