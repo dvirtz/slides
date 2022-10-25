@@ -8,6 +8,3 @@ if (typeof RevealTimeline !== 'undefined') {
 if (typeof RevealPdf !== 'undefined') {
   options.plugins.push(RevealPdf)
 }
-if (typeof RevealChart !== 'undefined') {
-  options.plugins.push(RevealChart);
-}
