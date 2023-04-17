@@ -1,0 +1,13 @@
+{
+  "words": [
+    "constness",
+    "decrementable",
+    "dereferenceable",
+    "gsnapshot",
+    "haswell",
+    "lvalue",
+    "rvalue",
+    "subexpression",
+    "Wextra"
+  ]
+}

@@ -11,7 +11,14 @@ const snippets = await FileHound.create().path('slides').ext('md').find()
           compiler: 'g111',
           options: '-std=c++20 -O2 -march=haswell -Wall -Wextra -pedantic -Wno-unused-variable -Wno-unused-parameter'
         };
-      } else {
+      }
+      else if (file.includes('ranges_23')) {
+        return {
+          compiler: 'gsnapshot',
+          options: '-std=c++23 -O2 -march=haswell -Wall -Wextra -pedantic -Wno-unused-variable -Wno-unused-parameter'
+        };
+      }
+      else {
         return {
           compiler: 'g83'
         };
