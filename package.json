@@ -8,7 +8,7 @@
     "present": "reveal-md slides/index.md -w",
     "generate": "reveal-md slides --static .site",
     "test": "mocha",
-    "spellcheck": "cspell 'slides/**/*.md'"
+    "spellcheck": "cspell slides/**/*.md"
   },
   "repository": {
     "type": "git",
@@ -28,12 +28,11 @@
     "github-fork-ribbon-css": "^0.2.3",
     "jquery": "^3.6.0",
     "mocha": "^10.0.0",
-    "reveal-test": "^3.0.0"
+    "reveal-test": "^3.1.0"
   },
   "dependencies": {
-    "mathjax": "~2.7.4",
-    "reveal-compiler-explorer": "^3.0.0",
-    "reveal-md": "^5.3.4",
+    "reveal-compiler-explorer": "^3.1.0",
+    "reveal-md": "^5.4.1",
     "reveal-pdf": "^1.0.1",
     "reveal-timeline": "^1.2.1",
     "timelinejs": "^2.35.6"

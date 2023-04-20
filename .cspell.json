@@ -1,14 +1,15 @@
 {
-    "version": "0.1",
+    "version": "0.2",
     "language": "en",
     "words": [
+        "ACCU",
+        "Bjarne",
         "dvir",
         "dvirtz",
         "dvirtzwastaken",
         "gmail",
-        "yitzchaki",
-        "Bjarne",
         "Stroustrup",
+        "yitzchaki"
     ],
     "flagWords": [],
     "ignorePaths": [
@@ -19,8 +20,9 @@
         {
             "languageId": "markdown",
             "ignoreRegExpList": [
-                "(`.*?`)|(<code>.*?</code>)", // inline code
+                "`.*?`", // inline code
                 "(```+)\\s?[\\s\\S]+?\\1", // code block
+                "<code\\b[\\s\\S]*?</code>", // html code
                 "'s\\b", // trailing 's
                 "<!--.*?-->", // comments
                 "\\]\\((#/)?[^\\)]+\\)", // internal links
