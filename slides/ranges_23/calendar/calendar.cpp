@@ -68,7 +68,6 @@
 #include <source_location>
 
 #include "expected.hpp"
-#include "chunk_by.hpp"
 #include "closure.hpp"
 #include "concat.hpp"
 #include "print.hpp"
@@ -82,13 +81,13 @@ namespace detail {
 
 template <typename Rng, typename T, int level>
 consteval bool recursive_range_of() {
-  if constexpr (level == 1)
-    if constexpr (ranges::range<Rng>)
-      return std::same_as<ranges::range_value_t<Rng>, T>;
+    if constexpr (level == 1)
+        if constexpr (ranges::range<Rng>)
+            return std::same_as<ranges::range_value_t<Rng>, T>;
+        else
+            return false;
     else
-      return false;
-  else
-    return recursive_range_of<ranges::range_value_t<Rng>, T, level - 1>();
+        return recursive_range_of<ranges::range_value_t<Rng>, T, level - 1>();
 }
 
 }  // namespace detail
@@ -106,7 +105,7 @@ namespace std {
 
 template <typename Clock, typename Duration>
 struct incrementable_traits<std::chrono::time_point<Clock, Duration>> {
-  using difference_type = typename Duration::rep;
+    using difference_type = typename Duration::rep;
 };
 
 #ifdef __clang__
@@ -114,16 +113,16 @@ struct incrementable_traits<std::chrono::time_point<Clock, Duration>> {
 template <typename Clock, typename Duration>
 std::chrono::time_point<Clock, Duration>& operator++(
     std::chrono::time_point<Clock, Duration>& tp) {
-  tp += Duration{1};
-  return tp;
+    tp += Duration{1};
+    return tp;
 }
 
 template <typename Clock, typename Duration>
 std::chrono::time_point<Clock, Duration> operator++(
     std::chrono::time_point<Clock, Duration>& tp, int) {
-  auto tmp = tp;
-  ++tmp;
-  return tmp;
+    auto tmp = tp;
+    ++tmp;
+    return tmp;
 }
 
 #endif
@@ -133,18 +132,24 @@ std::chrono::time_point<Clock, Duration> operator++(
 namespace detail {
 template <typename Rng>
 auto format_as_string(const std::string_view fmt, Rng&& rng) {
-  return std::vformat(fmt, std::make_format_args(std::forward<Rng>(rng) |
-                                                 ranges::to<std::string>()));
+  return std::vformat(fmt, std::make_format_args(
+#if __cpp_lib_format_ranges < 202207L
+    std::forward<Rng>(rng) | ranges::to<std::string>()
+#else
+  std::forward<Rng>(rng)
+#endif
+  ));
 }
 
 template <typename Rng>
 auto print_as_string(Rng&& rng) {
-#ifdef __clang__
   return std::println("{:s}",
-                        std::forward<Rng>(rng));
+#if __cpp_lib_format_ranges < 202207L
+                      std::forward<Rng>(rng) | ranges::to<std::string>()
 #else
-  return std::println("{}", format_as_string("{}", std::forward<Rng>(rng)));
+                      std::forward<Rng>(rng)
 #endif
+  );
 }
 
 auto start_of_week(date d) {
@@ -170,12 +175,12 @@ auto dates_from(std::chrono::year year) {
 }
 
 auto by_month() {
-  return chunk_by([](date a, date b) { return a.month() == b.month(); });
+  return views::chunk_by([](date a, date b) { return a.month() == b.month(); });
 }
 
 auto by_week() {
-  return chunk_by([](date a, date b) {
-    return detail::start_of_week(a) == detail::start_of_week(b);
+  return views::chunk_by([](date a, date b) {
+      return detail::start_of_week(a) == detail::start_of_week(b);
   });
 }
 
@@ -183,19 +188,20 @@ auto by_week() {
 // Out: range<std::string>: month with formatted weeks.
 inline constexpr closure format_weeks =
     [](nested_range_of<date, 2> auto month) {
-      const auto format_day = [](date d) {
-        return std::format("{:3}", d.day());
-      };
-      const auto format_week = views::transform(format_day) | views::join;
-      return concat(
-          month | views::take(1) |
-              views::transform([&](range_of<date> auto week) {
-                return detail::format_as_string("{:>21} ", week | format_week);
-              }),
-          month | views::drop(1) |
-              views::transform([&](range_of<date> auto week) {
-                return detail::format_as_string("{:22}", week | format_week);
-              }));
+        const auto format_day = [](date d) {
+            return std::format("{:3}", d.day());
+        };
+        const auto format_week = views::transform(format_day) | views::join;
+        return concat(month | views::take(1) |
+                          views::transform([&](range_of<date> auto week) {
+                              return detail::format_as_string(
+                                  "{:>21s} ", week | format_week);
+                          }),
+                      month | views::drop(1) |
+                          views::transform([&](range_of<date> auto week) {
+                              return detail::format_as_string(
+                                  "{:22s}", week | format_week);
+                          }));
     };
 
 // Return a formatted string with the title of the month
@@ -206,12 +212,11 @@ std::string month_title(date d) { return std::format("{:^22%B}", d.month()); }
 // Out: range<range<std::string>>: year of months of formatted wks
 auto layout_months() {
   return views::transform([](range_of<date> auto month) {
-    const auto week_count = ranges::distance(month | by_week());
-    static const std::string empty_week(22, ' ');
-    return concat(
-        views::single(month_title(month.front())),
-        month | by_week() | format_weeks,
-        views::repeat(empty_week, 6 - week_count) | ranges::to<std::vector>());
+      const auto week_count = ranges::distance(month | by_week());
+      static const std::string empty_week(22, ' ');
+      return concat(views::single(month_title(month.front())),
+                    month | by_week() | format_weeks,
+                    views::repeat(empty_week, 6 - week_count));
   });
 }
 
@@ -219,12 +224,12 @@ auto layout_months() {
 // Out: range<range<range<string>>>, transposing months.
 auto transpose_months() {
   return views::transform([]<nested_range_of<std::string, 2> Rng>(Rng&& rng)
-                            requires ranges::forward_range<Rng>
+                              requires ranges::forward_range<Rng>
                           {
-                            const auto begin = ranges::begin(rng);
-                            return views::zip_transform(
-                                concat, *begin, *ranges::next(begin),
-                                *ranges::next(begin, 2));
+                              const auto begin = ranges::begin(rng);
+                              return views::zip_transform(
+                                  concat, *begin, *ranges::next(begin),
+                                  *ranges::next(begin, 2));
                           });
 }
 
@@ -271,7 +276,7 @@ constexpr inline expected<T> convert(const std::string_view str) {
   T t;
   const auto [_, ec] = std::from_chars(str.data(), str.data() + str.size(), t);
   if (ec == std::errc{}) {
-    return t;
+      return t;
   }
 
   return unexpected(std::error_condition{ec}.message());
@@ -283,24 +288,24 @@ int main(int argc, char* argv[]) {
   using namespace std::literals;
 
   const auto usage = [exe = argv[0]](const Error& error) {
-    std::println(stderr, "{}", error.message());
-    std::println(stderr, "usage: {} start [stop|never] [per-line]", exe);
-    exit(1);
+      std::println(stderr, "{}", error.message());
+      std::println(stderr, "usage: {} start [stop|never] [per-line]", exe);
+      exit(1);
   };
   const auto arg = [&](int index, std::optional<std::string> default_value =
                                       std::nullopt) -> expected<std::string> {
-    if (index < argc) {
-      return argv[index];
-    }
+      if (index < argc) {
+          return argv[index];
+      }
 
-    if (default_value) {
-      return *std::move(default_value);
-    }
+      if (default_value) {
+          return *std::move(default_value);
+      }
 
-    return unexpected(std::format("index {} out of bounds", index));
+      return unexpected(std::format("index {} out of bounds", index));
   };
   const auto to_year = [](std::string_view str) {
-    return convert(str).transform([](int i) { return year{i}; });
+      return convert(str).transform([](int i) { return year{i}; });
   };
 
   // clang-format off

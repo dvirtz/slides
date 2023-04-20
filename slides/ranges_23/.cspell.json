@@ -1,12 +1,19 @@
 {
   "words": [
     "constness",
+    "constructiblity",
     "decrementable",
     "dereferenceable",
     "gsnapshot",
     "haswell",
+    "incrementable",
+    "initializable",
     "lvalue",
+    "Niebler",
+    "rangified",
+    "Revzin",
     "rvalue",
+    "Stepanov",
     "subexpression",
     "Wextra"
   ]

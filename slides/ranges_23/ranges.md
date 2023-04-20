@@ -9,9 +9,13 @@ highlightTheme: atom-one-dark
 
 <!-- .slide: data-background-image="resources/title.png" -->
 
+Note:  hello and welcome to my talk about C++ 23 ranges. My name is Dvir, I recently moved to live in Manchester here in the UK and I work for Roku.
+
 ----
 
 <!-- .slide: data-background-image="resources/EricTaDa.png" -->
+
+Note:  now anyone here saw this talk by Eric Niebler from CppCon 2015? I personally was in awe after seeing this. In his talk Eric implements a calendar software using his range-v3 library and the elegance and readability of the code was simply amazing. Now, this was before ranges we're proposed for standardization but as you probably know ranges were standardized for C++ 20. However, a large number of useful utilities remained missing but the good news is C++ 23 will have many additions to ranges, and in fact, we can now finally implement the same calendar software using standard C++ and that's exactly what we're going to do today.
 
 ----
 
@@ -25,12 +29,30 @@ Source: https://discovernorthernireland.com/
 
 <!-- .element: style="font-size: 0.5em" -->
 
+Note: Let's first do a quick recap of what exactly ranges are in case anyone in the audience never used them. 
+
+
+
 ---
 
 ### what is a range
 
 - A sequence of elements between two locations `i`, `k`.
 - Often denoted by `[i, k)`.
+
+Note: conceptually, a range is a sequence of all the elements between two locations, called `i` and `k` here, not including `k`.
+
+---
+
+> Although Concepts are constraints on types,
+> you don’t find them by looking at the types in your system.
+>
+> You find them by studying the algorithms.
+
+<p style="width: 100%; text-align: right;"> <cite> Eric Neibler </cite> </p>
+
+Note: A famous quote by Eric says that "although concepts are constrained on types you don't find them by looking at the types 
+but by studying the algorithms", so let's look start at the most simple algorithm...
 
 ---
 
@@ -51,6 +73,9 @@ constexpr UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f)
 </code>
 </pre>
 
+Note: `std::for_each`. This is a conforming implementation of the C++ 17 version of `for_each`, which gets a range by the means of a pair of iterators, `first` and `last`,
+iterates between them and call the given function `f` on each element.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -69,6 +94,8 @@ constexpr UnaryFunction for_each(<mark>InputIt first</mark>, InputIt last, Unary
 }
 </code>
 </pre>
+
+Note: the way the implementation uses `first` is dereferencing it to get the current value and incrementing it to go to the next element 
 
 ---
 
@@ -106,6 +133,8 @@ constexpr UnaryFunction for_each(<mark>InputIt first</mark>, InputIt last, Unary
   </tr>
 </tbody></table>
 
+Note: That brings us to the first concept which is an iterator (or is it called in standard `input_or_output_iterator`, because `std::iterator` was already taken), which is any type that can be dereferenced and incremented. From that we derive other types of iterators, by adding more and more capabilities, for example a bidirectional iterator can also go back using the decrement operator and so on and so forth. A new type of iterator introduced in C++ 20 is a contiguous iterator, which can be used to enable certain optimizations that are only possible if the elements are actually contiguous in memory.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -125,6 +154,9 @@ constexpr UnaryFunction for_each(InputIt first, <mark>InputIt last</mark>, Unary
 </code>
 </pre>
 
+Note: back to `for_each`, the only thing the algorithm does with the second argument, `last`, is to compare it to `first` to know when the end of the sequence
+was reached. 
+
 ---
 
 ## Sentinels
@@ -134,6 +166,8 @@ constexpr UnaryFunction for_each(InputIt first, <mark>InputIt last</mark>, Unary
   - If `i != s` then `i` is dereferenceable and `[++i, s)` denotes a range.
 
 - Such an `s` is called a sentinel
+
+Note: This brings us to the concept of sentinel, which is a semi regular type that can be compared to the iterator and if that comparison is false, then we know that we can increment the iterator and get "closer" to the sentinel. So basically sentinel is always tied to an iterator type. 
 
 ---
 
@@ -148,6 +182,9 @@ A range `[i, s)` refers to the elements
 `*i, *(i++), *((i++)++), …, j`
 
 such that j == s.
+
+Note: combining those two concepts gives us the range concept which is a type that can provide an iterator by calling `begin` and a sentinel by calling `end`.
+The values of the range are what we get by repeatedly dereferencing and incrementing the iterator until it compares equal to the sentinel.
 
 ---
 
@@ -164,6 +201,9 @@ such that j == s.
 |`common_range`|sentinel is same type as iterator|
 
 <!-- .element: class="no-border no-header" style="font-size: 0.6em" -->
+
+Note: The type of the iterator which we get from `begin` mandates the what concept the range satisfies, and you can see here examples from the standard library for the different concepts. 
+Another important concept is a common range which is a range whose iterator and sentinel are the same type, like all those containers. Such a range can be used with the legacy code, which expect a pair of iterators.
 
 ---
 
@@ -204,6 +244,9 @@ for_each(R&& r,
 
 <!-- .element: style="font-size: 0.45em" -->
 
+Note: The C++ 20 ranges algorithms using the concepts we've seen to constrain the types they are able to get. Each algorithm has two signatures, one that takes an iterator
+and a sentinel and one that takes a single range argument. Usually, you'll just need the latter one.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -213,6 +256,25 @@ for_each(R&& r,
 > A procedure should return all the potentially useful information it computed.
 
 <p style="width: 100%; text-align: right;"> <cite> Alexander Stepanov </cite> </p>
+
+Note: some of the algorithms also have a different return type than their C++17 counterparts and that's due to this law of useful return, coined by Alexander Stepanov,
+that states that and data computed by a function which is potentially useful for the caller should be returned.
+
+---
+
+## range
+
+a type we can feed to
+- `ranges::begin` - to get an iterator
+- `ranges::end` - to get a sentinel
+
+A range `[i, s)` refers to the elements
+
+`*i, *(i++), *((i++)++), …, j`
+
+such that j == s.
+
+Note: this `j` here, which is the end iterator is a potentially useful data which the caller doesn't have and so should be returned. Think on parsing for example, where we want to know where the current token ends.
 
 ---
 
@@ -249,7 +311,7 @@ struct for_each_result {
 
 <!-- .element: style="font-size: 0.4em" -->
 
-Note: in addition to returning the function, it now returns the end iterator of the input range. This is the iterator that compared equal to the input sentinel.
+Note: in addition to returning the function, `for_each` now returns the end iterator.
 
 ---
 
@@ -260,6 +322,9 @@ A lightweight™ handle to a range.
 - A range type that wraps a pair of iterators.
 - A range type that holds its elements by `std::shared_ptr` and shares ownership with all its copies.
 - A range type that generates its elements on demand.
+
+Note: A special type of range which is cheap to pass around is called a view. For example, a range which is simply a pair of iterators, or a range which holds 
+it's elements on the heap using a `shared_ptr`, or a range that simply generates its values on demand. We will talk about views in depth later on. 
 
 
 ---
@@ -295,6 +360,8 @@ public:
 
 <!-- .element: style="font-size: 0.45em" -->
 
+Note: the most basic view which we have in the standard is the empty view, where begin and end are always the same.
+
 ---
 
 ## Factories & Adaptors
@@ -303,7 +370,7 @@ public:
   - adaptors (if transform an existing range) or 
   - factories (otherwise)
 
-```cpp [1-4,7]
+```cpp []
 ///compiler=g102
 ///options=-std=c++2a
 ///hide
@@ -319,9 +386,12 @@ inline constexpr empty_view<T> empty{};
 #endif
 ///unhide
 
-using namespace std::ranges;
-static_assert(empty(views::empty<int>));
+static_assert(std::ranges::empty(std::views::empty<int>));
 ```
+
+Note: generally speaking, user code should not use the view types (like `empty_view`) directly. Instead, it should use range adaptors and factories, which reside in namespace `std::ranges::views` or its alias `std::views`. A range adaptor takes a range and transforms it in some way and factories generate new ranges.
+
+In this example, we use the `views::empty` factory to generate an empty range of `int`s and then verify (at compile time!) it is indeed empty.
 
 ---
 
@@ -348,6 +418,9 @@ int sum_of_squares(int count) {
 ```
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
+
+Note: to illustrate the way ranges change the way we write code, let's look at this example of calculating the sum of squares of the numbers 0 to `count`.
+Besides all those annoying calls to `begin` and `end` we have to run each step in its own statement. The code is not composable.  
 
 ---
 
@@ -376,6 +449,9 @@ int sum_of_squares(int count) {
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
 
+Note: range adaptors are composable. we can pass the result of one adaptor to the next.
+Using function calls, however, have the problem that to read the code we should go from inside out.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -400,7 +476,8 @@ int sum_of_squares(int count) {
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
 
-Note: this doesn't really compile with the C++20 accumulate.
+Note: using the pipe operator, enables us to read the code top down and makes it much more readable. 
+note that this doesn't really compile with the C++20 accumulate because a rangified version of that was not standardized in C++20 but that also changed in C++23 as we will see.
 
 ---
 
@@ -408,7 +485,7 @@ Note: this doesn't really compile with the C++20 accumulate.
 
 ### listing the days
 
-```cpp [1|3-12]
+```cpp [1|9-12|3-7|9-12]
 ///hide
 #include <chrono>
 #include <ranges>
@@ -436,13 +513,16 @@ auto dates(std::chrono::year start, std::chrono::year stop) {
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
 
+Note: We can now start to implement our calendar. We'll use the C++20 `chrono` dates library. To simplify the code, we'll call `std::chrono::year_month_day` a `date`. Given 
+a range of years to generate a calender of, we produce a list of all the dates between the first day of the start year and the first day of the last one (remember we're not including the stop year). Since `date` itself is not incrementable we use the `chrono::sys_days` which is a `time_point` with granularity of days which is incrementable and so can be used with iota view and then we cast the resulting list back to dates. 
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
 
 ### listing the days
 
-```cpp [3-12]
+```cpp [9-12]
 ///hide
 #include <chrono>
 #include <ranges>
@@ -470,6 +550,8 @@ auto dates_from(std::chrono::year year) {
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
 
+Note: we will also support generating an infinite calendar starting from a given year and we use the infinite version of iota for that.
+
 ---
 
 <!-- .slide: class="aside" -->
@@ -481,6 +563,8 @@ auto dates_from(std::chrono::year year) {
 [2023-01-01, 2023-01-02, 2023-01-03, 2023-01-04, 2023-01-05, 2023-01-06, 2023-01-07, 2023-01-08, 2023-01-09, 2023-01-10, 2023-01-11, 2023-01-12, 2023-01-13, 2023-01-14, 2023-01-15, 2023-01-16, 2023-01-17, 2023-01-18, 2023-01-19, 2023-01-20, 2023-01-21, 2023-01-22, 2023-01-23, 2023-01-24, 2023-01-25, 2023-01-26, 2023-01-27, 2023-01-28, 2023-01-29, 2023-01-30, 2023-01-31, 2023-02-01, 2023-02-02, 2023-02-03, 2023-02-04, 2023-02-05, 2023-02-06, 2023-02-07, 2023-02-08, 2023-02-09, 2023-02-10, 2023-02-11, 2023-02-12, 2023-02-13, 2023-02-14, 2023-02-15, 2023-02-16, 2023-02-17, 2023-02-18, 2023-02-19, 2023-02-20, 2023-02-21, 2023-02-22, 2023-02-23, 2023-02-24, 2023-02-25, 2023-02-26, 2023-02-27, 2023-02-28, 2023-03-01, 2023-03-02, 2023-03-03, 2023-03-04, 2023-03-05, 2023-03-06, 2023-03-07, 2023-03-08, 2023-03-09, 2023-03-10, 2023-03-11, 2023-03-12, 2023-03-13, 2023-03-14, 2023-03-15, 2023-03-16, 2023-03-17, 2023-03-18, 2023-03-19, 2023-03-20, 2023-03-21, 2023-03-22, 2023-03-23, 2023-03-24, 2023-03-25, 2023-03-26, 2023-03-27, 2023-03-28, 2023-03-29, 2023-03-30, 2023-03-31, 2023-04-01, 2023-04-02, 2023-04-03, 2023-04-04, 2023-04-05, 2023-04-06, 2023-04-07, 2023-04-08, 2023-04-09, 2023-04-10, 2023-04-11, 2023-04-12, 2023-04-13, 2023-04-14, 2023-04-15, 2023-04-16, 2023-04-17, 2023-04-18, 2023-04-19, 2023-04-20, 2023-04-21, 2023-04-22, 2023-04-23, 2023-04-24, 2023-04-25, 2023-04-26, 2023-04-27, 2023-04-28, 2023-04-29, 2023-04-30, 2023-05-01, 2023-05-02, 2023-05-03, 2023-05-04, 2023-05-05, 2023-05-06, 2023-05-07, 2023-05-08, 2023-05-09, 2023-05-10, 2023-05-11, 2023-05-12, 2023-05-13, 2023-05-14, 2023-05-15, 2023-05-16, 2023-05-17, 2023-05-18, 2023-05-19, 2023-05-20, 2023-05-21, 2023-05-22, 2023-05-23, 2023-05-24, 2023-05-25, 2023-05-26, 2023-05-27, 2023-05-28, 2023-05-29, 2023-05-30, 2023-05-31, 2023-06-01, 2023-06-02, 2023-06-03, 2023-06-04, 2023-06-05, 2023-06-06, 2023-06-07, 2023-06-08, 2023-06-09, 2023-06-10, 2023-06-11, 2023-06-12, 2023-06-13, 2023-06-14, 2023-06-15, 2023-06-16, 2023-06-17, 2023-06-18, 2023-06-19, 2023-06-20, 2023-06-21, 2023-06-22, 2023-06-23, 2023-06-24, 2023-06-25, 2023-06-26, 2023-06-27, 2023-06-28, 2023-06-29, 2023-06-30, 2023-07-01, 2023-07-02, 2023-07-03, 2023-07-04, 2023-07-05, 2023-07-06, 2023-07-07, 2023-07-08, 2023-07-09, 2023-07-10, 2023-07-11, 2023-07-12, 2023-07-13, 2023-07-14, 2023-07-15, 2023-07-16, 2023-07-17, 2023-07-18, 2023-07-19, 2023-07-20, 2023-07-21, 2023-07-22, 2023-07-23, 2023-07-24, 2023-07-25, 2023-07-26, 2023-07-27, 2023-07-28, 2023-07-29, 2023-07-30, 2023-07-31, 2023-08-01, 2023-08-02, 2023-08-03, 2023-08-04, 2023-08-05, 2023-08-06, 2023-08-07, 2023-08-08, 2023-08-09, 2023-08-10, 2023-08-11, 2023-08-12, 2023-08-13, 2023-08-14, 2023-08-15, 2023-08-16, 2023-08-17, 2023-08-18, 2023-08-19, 2023-08-20, 2023-08-21, 2023-08-22, 2023-08-23, 2023-08-24, 2023-08-25, 2023-08-26, 2023-08-27, 2023-08-28, 2023-08-29, 2023-08-30, 2023-08-31, 2023-09-01, 2023-09-02, 2023-09-03, 2023-09-04, 2023-09-05, 2023-09-06, 2023-09-07, 2023-09-08, 2023-09-09, 2023-09-10, 2023-09-11, 2023-09-12, 2023-09-13, 2023-09-14, 2023-09-15, 2023-09-16, 2023-09-17, 2023-09-18, 2023-09-19, 2023-09-20, 2023-09-21, 2023-09-22, 2023-09-23, 2023-09-24, 2023-09-25, 2023-09-26, 2023-09-27, 2023-09-28, 2023-09-29, 2023-09-30, 2023-10-01, 2023-10-02, 2023-10-03, 2023-10-04, 2023-10-05, 2023-10-06, 2023-10-07, 2023-10-08, 2023-10-09, 2023-10-10, 2023-10-11, 2023-10-12, 2023-10-13, 2023-10-14, 2023-10-15, 2023-10-16, 2023-10-17, 2023-10-18, 2023-10-19, 2023-10-20, 2023-10-21, 2023-10-22, 2023-10-23, 2023-10-24, 2023-10-25, 2023-10-26, 2023-10-27, 2023-10-28, 2023-10-29, 2023-10-30, 2023-10-31, 2023-11-01, 2023-11-02, 2023-11-03, 2023-11-04, 2023-11-05, 2023-11-06, 2023-11-07, 2023-11-08, 2023-11-09, 2023-11-10, 2023-11-11, 2023-11-12, 2023-11-13, 2023-11-14, 2023-11-15, 2023-11-16, 2023-11-17, 2023-11-18, 2023-11-19, 2023-11-20, 2023-11-21, 2023-11-22, 2023-11-23, 2023-11-24, 2023-11-25, 2023-11-26, 2023-11-27, 2023-11-28, 2023-11-29, 2023-11-30, 2023-12-01, 2023-12-02, 2023-12-03, 2023-12-04, 2023-12-05, 2023-12-06, 2023-12-07, 2023-12-08, 2023-12-09, 2023-12-10, 2023-12-11, 2023-12-12, 2023-12-13, 2023-12-14, 2023-12-15, 2023-12-16, 2023-12-17, 2023-12-18, 2023-12-19, 2023-12-20, 2023-12-21, 2023-12-22, 2023-12-23, 2023-12-24, 2023-12-25, 2023-12-26, 2023-12-27, 2023-12-28, 2023-12-29, 2023-12-30, 2023-12-31]
 </code>
 </pre>
+
+Note: this is how the result looks like for 2023
 
 ----
 
@@ -494,9 +578,7 @@ Source: [pennaspillo.it](https://pennaspillo.it/it/londra/casette-pastello-londr
 
 <!-- .element: style="font-size: 0.5em" -->
 
-Note: Perhaps the most useful addition to C++ is the ability to format and print ranges, as part
-of the new format library, and most of the code examples we'll look at today will use that ability,
-so we'll start with that.
+Note: Next thing we want to do is take the list of dates and format them as we want to calendar to look like. To that end we will use what is perhaps the most important addition to C++23 and that is the ability to format and print ranges, as part of the new format library.
 
 
 ---
@@ -518,7 +600,7 @@ int main() {
 ///unhide
 std::println("{}", std::vector{1, 2, 3});
 std::println("{}", std::set{1, 2, 3});
-std::println("{}", std::pair{42, 16});
+std::println("{}", std::tuple{42, 16});
 std::println("{}", std::map&lt;int, int&gt;{{1, 2}, {3, 4}});
 ///hide
 }
@@ -534,6 +616,9 @@ std::println("{}", std::map&lt;int, int&gt;{{1, 2}, {3, 4}});
 </code>
 </pre>
 
+Note: A really nice addition, not directly related to ranges is `std::println` which, as you probably guessed, prints the data followed by a new line.
+We now have the ability to print standard containers. Different types use different formatting by default. `vector` is formatted using square brackets. 
+Associative containers like `set`, use curly braces. `tuple`s and `pair`s have parentheses and `std::map` is printed as a list of key colon value.
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -546,6 +631,10 @@ std::println("{}", std::map&lt;int, int&gt;{{1, 2}, {3, 4}});
 ```
 
 <!-- .element: data-id="formats" -->
+
+Note: to customize the formatting, use use what's called a format specifier, which in C++20 was a pair of curly braces, optionally containing an index for the
+argument you want to be put in this place, followed by colon and some text which tells the format library exactly how to format this argument, like width and 
+precision.
 
 ---
 
@@ -562,6 +651,8 @@ std::println("{}", std::map&lt;int, int&gt;{{1, 2}, {3, 4}});
 ```
 
 <!-- .element: data-id="formats" -->
+
+Note: for formatting a range's elements we add an additional colon format-spec. and if that's a range of ranges we can add more format specs this way as needed.
 
 ---
 
@@ -596,6 +687,9 @@ std::println("{:#>20:#x}", std::vector{1, 2, 3});
 </code>
 </pre>
 
+Note: The first and second line print vector according to the default formatting. on the third line we specify to print that vector right aligned in a 20 character space,
+padded by hashes. On the last line, in addition, we specify that the elements should be formatted as hexadecimal numbers. The width, alignment and padding of the range
+are kept.  
 
 ---
 
@@ -630,6 +724,8 @@ std::println("{:n}",  std::set{1, 2, 3});
 </code>
 </pre>
 
+Note: there are new format specifies like question mark for escaping a string, `m` for printing a pair as a key colon value and `n` for omitting the outer delimiters.
+
 ----
 
 <!-- .slide: data-background-image="resources/windowing.jpg" -->
@@ -642,6 +738,8 @@ std::println("{:n}",  std::set{1, 2, 3});
 Source: [Mark Waugh](https://www.markwaugh.net/-/galleries/portfolios/travel/uk/manchester/manchester-skyline-at-night/-/medias/556a2fb0-19ce-4b1e-af43-ddb688731c23-manchester-city-centre-skyline/)
 
 <!-- .element: style="font-size: 0.5em" -->
+
+Note: Another thing we need to do is split to list of dates to months to be able to print them side by side. C++23 also gives us this capability and other similar windowing views.
 
 ---
 
@@ -666,6 +764,8 @@ std::println("{}", v | std::views::chunk(2));
 }
 </code>
 </pre>
+
+Note: chunk slices the input range to sub-ranges of a fixed size, 2 in this example.
 
 ---
 
@@ -719,6 +819,8 @@ std::println("{}", v | std::views::chunk(2));
 [[1, 2], [3, 4], [5]]
 ```
 
+Note: the last chunk might be smaller then the chunk size.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -742,6 +844,8 @@ std::println("{}", v | std::views::slide(2));
 }
 </code>
 </pre>
+
+Note: slide provides a running window to the range, again of a fixed size, stepping one element at a time.
 
 ---
 
@@ -819,6 +923,8 @@ std::println("{}", v | std::views::slide(2));
 [[1, 2], [2, 3], [3, 4], [4, 5]]
 ```
 
+Note: Here, all the chunks have the same size.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -842,6 +948,8 @@ std::println("{}", v | std::views::stride(2));
 }
 </code>
 </pre>
+
+Note: stride generates a range of elements at equal distance.
 
 ---
 
@@ -906,50 +1014,10 @@ std::println("{}", v | std::views::stride(2));
 | slide	| 1	| k	| false |
 | stride	| k |	1 |	N/A |
 
-Notes: why not generic?
-
-- no named arguments
-- views would have redundant members
+Note: You might notice that in fact all those adaptors are a specialization of a generic windowing view which can have arbitrary size, step and whether we want partial chunks at the end, which brings up the question of why the standard provides this generic version and implement all the others using it and the answer is that it would make each of them use more space for the unneeded parameters and also that calling this hypothetical algorithms would require two numbers and a bool and since we don't have named arguments would obfuscate calling code.
 
 
 ---
-
-<!-- .slide: data-auto-animate -->
-
-### windowed
-
-```cpp
-///libs=fmt:trunk
-///output=[[0, 1, 2, 3, 4], [3, 4, 5, 6, 7], [6, 7, 8, 9, 10], [9, 10, 11, 12, 13], [12, 13, 14, 15, 16], [15, 16, 17, 18, 19]]
-///hide
-#include <https://godbolt.org/z/K884c4hza/code/1> // print
-#include <ranges>
-
-///unhide
-namespace args {
-struct windowed {
-    std::size_t size;
-    std::size_t stride;
-};
-}  // namespace args
-constexpr auto windowed(args::windowed args) {
-    using namespace std::views;
-    return slide(args.size) | stride(args.stride);
-}
-
-///hide
-int main() {
-///unhide
-std::println("{}",
-              std::views::iota(0, 20) 
-              | windowed({.size = 5, .stride = 3}));
-///hide
-}
-```
-
----
-
-<!-- .slide: data-auto-animate -->
 
 ### windowed
 
@@ -986,6 +1054,8 @@ std::println("{}",
 [[0, 1, 2, 3, 4], [3, 4, 5, 6, 7], [6, 7, 8, 9, 10], ...
 ```
 
+Note: it is strait forward, however, to implement a generic windowing adaptor by combining slide and stride like this. supporting the third parameter is left as an exercise for the viewers. Notice the usage of designated initializers to emulate named arguments.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -1010,6 +1080,8 @@ std::println("{}", v | views::chunk_by(less_equal{}));
 ```
 
 <!-- .slide: data-auto-animate -->
+
+Note: the last windowing view is `chunk_by` which gets a binary predicate and splits the range whenever the predicate returns false on adjacent elements.
 
 ---
 
@@ -1038,6 +1110,8 @@ std::println("{}", v | views::chunk_by(less_equal{}));
 [[1, 2, 2, 3], [1, 2], [0, 4, 5], [2]]
 ```
 
+Note: in this example, we produce a list of the monotonically increasing sub-sequences of the input range.
+
 ---
 
 ### unlike `range-v3`'s `group_by`
@@ -1064,7 +1138,8 @@ std::println("{}", v | views::group_by(less_equal{}));
 [[1, 2, 2, 3, 1, 2], [0, 4, 5, 2]]
 ```
 
-Note: `group_by` is deprecated and replaced by `chunk_by`
+Note: if you are a range-v3 user, it used to have a `group_by` adaptor which has a slightly different behavior. 
+This is now deprecated and replaced by `chunk_by` as well.
 
 ---
 
@@ -1088,6 +1163,8 @@ auto by_month() {
 }
 ```
 
+Note: going back to the calendar, we chunk the list of dates we generated previously to months using `chunk_by`.
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
@@ -1099,6 +1176,8 @@ auto by_month() {
 [2023-01-01, 2023-01-02, 2023-01-03, 2023-01-04, 2023-01-05, 2023-01-06, 2023-01-07, 2023-01-08, 2023-01-09, 2023-01-10, 2023-01-11, 2023-01-12, 2023-01-13, 2023-01-14, 2023-01-15, 2023-01-16, 2023-01-17, 2023-01-18, 2023-01-19, 2023-01-20, 2023-01-21, 2023-01-22, 2023-01-23, 2023-01-24, 2023-01-25, 2023-01-26, 2023-01-27, 2023-01-28, 2023-01-29, 2023-01-30, 2023-01-31, 2023-02-01, 2023-02-02, 2023-02-03, 2023-02-04, 2023-02-05, 2023-02-06, 2023-02-07, 2023-02-08, 2023-02-09, 2023-02-10, 2023-02-11, 2023-02-12, 2023-02-13, 2023-02-14, 2023-02-15, 2023-02-16, 2023-02-17, 2023-02-18, 2023-02-19, 2023-02-20, 2023-02-21, 2023-02-22, 2023-02-23, 2023-02-24, 2023-02-25, 2023-02-26, 2023-02-27, 2023-02-28, 2023-03-01, 2023-03-02, 2023-03-03, 2023-03-04, 2023-03-05, 2023-03-06, 2023-03-07, 2023-03-08, 2023-03-09, 2023-03-10, 2023-03-11, 2023-03-12, 2023-03-13, 2023-03-14, 2023-03-15, 2023-03-16, 2023-03-17, 2023-03-18, 2023-03-19, 2023-03-20, 2023-03-21, 2023-03-22, 2023-03-23, 2023-03-24, 2023-03-25, 2023-03-26, 2023-03-27, 2023-03-28, 2023-03-29, 2023-03-30, 2023-03-31, 2023-04-01, 2023-04-02, 2023-04-03, 2023-04-04, 2023-04-05, 2023-04-06, 2023-04-07, 2023-04-08, 2023-04-09, 2023-04-10, 2023-04-11, 2023-04-12, 2023-04-13, 2023-04-14, 2023-04-15, 2023-04-16, 2023-04-17, 2023-04-18, 2023-04-19, 2023-04-20, 2023-04-21, 2023-04-22, 2023-04-23, 2023-04-24, 2023-04-25, 2023-04-26, 2023-04-27, 2023-04-28, 2023-04-29, 2023-04-30, 2023-05-01, 2023-05-02, 2023-05-03, 2023-05-04, 2023-05-05, 2023-05-06, 2023-05-07, 2023-05-08, 2023-05-09, 2023-05-10, 2023-05-11, 2023-05-12, 2023-05-13, 2023-05-14, 2023-05-15, 2023-05-16, 2023-05-17, 2023-05-18, 2023-05-19, 2023-05-20, 2023-05-21, 2023-05-22, 2023-05-23, 2023-05-24, 2023-05-25, 2023-05-26, 2023-05-27, 2023-05-28, 2023-05-29, 2023-05-30, 2023-05-31, 2023-06-01, 2023-06-02, 2023-06-03, 2023-06-04, 2023-06-05, 2023-06-06, 2023-06-07, 2023-06-08, 2023-06-09, 2023-06-10, 2023-06-11, 2023-06-12, 2023-06-13, 2023-06-14, 2023-06-15, 2023-06-16, 2023-06-17, 2023-06-18, 2023-06-19, 2023-06-20, 2023-06-21, 2023-06-22, 2023-06-23, 2023-06-24, 2023-06-25, 2023-06-26, 2023-06-27, 2023-06-28, 2023-06-29, 2023-06-30, 2023-07-01, 2023-07-02, 2023-07-03, 2023-07-04, 2023-07-05, 2023-07-06, 2023-07-07, 2023-07-08, 2023-07-09, 2023-07-10, 2023-07-11, 2023-07-12, 2023-07-13, 2023-07-14, 2023-07-15, 2023-07-16, 2023-07-17, 2023-07-18, 2023-07-19, 2023-07-20, 2023-07-21, 2023-07-22, 2023-07-23, 2023-07-24, 2023-07-25, 2023-07-26, 2023-07-27, 2023-07-28, 2023-07-29, 2023-07-30, 2023-07-31, 2023-08-01, 2023-08-02, 2023-08-03, 2023-08-04, 2023-08-05, 2023-08-06, 2023-08-07, 2023-08-08, 2023-08-09, 2023-08-10, 2023-08-11, 2023-08-12, 2023-08-13, 2023-08-14, 2023-08-15, 2023-08-16, 2023-08-17, 2023-08-18, 2023-08-19, 2023-08-20, 2023-08-21, 2023-08-22, 2023-08-23, 2023-08-24, 2023-08-25, 2023-08-26, 2023-08-27, 2023-08-28, 2023-08-29, 2023-08-30, 2023-08-31, 2023-09-01, 2023-09-02, 2023-09-03, 2023-09-04, 2023-09-05, 2023-09-06, 2023-09-07, 2023-09-08, 2023-09-09, 2023-09-10, 2023-09-11, 2023-09-12, 2023-09-13, 2023-09-14, 2023-09-15, 2023-09-16, 2023-09-17, 2023-09-18, 2023-09-19, 2023-09-20, 2023-09-21, 2023-09-22, 2023-09-23, 2023-09-24, 2023-09-25, 2023-09-26, 2023-09-27, 2023-09-28, 2023-09-29, 2023-09-30, 2023-10-01, 2023-10-02, 2023-10-03, 2023-10-04, 2023-10-05, 2023-10-06, 2023-10-07, 2023-10-08, 2023-10-09, 2023-10-10, 2023-10-11, 2023-10-12, 2023-10-13, 2023-10-14, 2023-10-15, 2023-10-16, 2023-10-17, 2023-10-18, 2023-10-19, 2023-10-20, 2023-10-21, 2023-10-22, 2023-10-23, 2023-10-24, 2023-10-25, 2023-10-26, 2023-10-27, 2023-10-28, 2023-10-29, 2023-10-30, 2023-10-31, 2023-11-01, 2023-11-02, 2023-11-03, 2023-11-04, 2023-11-05, 2023-11-06, 2023-11-07, 2023-11-08, 2023-11-09, 2023-11-10, 2023-11-11, 2023-11-12, 2023-11-13, 2023-11-14, 2023-11-15, 2023-11-16, 2023-11-17, 2023-11-18, 2023-11-19, 2023-11-20, 2023-11-21, 2023-11-22, 2023-11-23, 2023-11-24, 2023-11-25, 2023-11-26, 2023-11-27, 2023-11-28, 2023-11-29, 2023-11-30, 2023-12-01, 2023-12-02, 2023-12-03, 2023-12-04, 2023-12-05, 2023-12-06, 2023-12-07, 2023-12-08, 2023-12-09, 2023-12-10, 2023-12-11, 2023-12-12, 2023-12-13, 2023-12-14, 2023-12-15, 2023-12-16, 2023-12-17, 2023-12-18, 2023-12-19, 2023-12-20, 2023-12-21, 2023-12-22, 2023-12-23, 2023-12-24, 2023-12-25, 2023-12-26, 2023-12-27, 2023-12-28, 2023-12-29, 2023-12-30, 2023-12-31]
 </code>
 </pre>
+
+Note: we go from this
 
 ---
 
@@ -1125,6 +1204,8 @@ auto by_month() {
 </code>
 </pre>
 
+Note: to that
+
 
 ----
 
@@ -1138,6 +1219,9 @@ auto by_month() {
 Source: [Albanpix/Rex Features](https://www.theguardian.com/environment/gallery/2014/may/02/the-beauty-of-windfarms-in-pictures#img-11)
 
 <!-- .element: style="font-size: 0.5em" -->
+
+Note: We mentioned range factories which generate their elements on the fly. A new type of this category is `std::generator`. I'm not going to delve deep
+into coroutines in this talk. For that you gave other talks in this conference but will focus on the range aspects.
 
 ---
 
@@ -1172,7 +1256,7 @@ return std::ranges::fold_left(std::move(rng), 0, std::plus{});
 
 <!-- .element: style="font-size: 0.5em" -->
 
-Note: `std::generator` is a move-only view which models `input_range` and has move-only iterators. This is because the coroutine state is a unique resource
+Note: this is a classic fibonacci sequence implemented using coroutines. the resulting range is a move-only input range. This is because the coroutine state, held by the generator, is a unique resource.
 
 ---
 
@@ -1200,6 +1284,8 @@ using generator =
 ```
 
 <!-- .element: data-id="code" style="font-size: 0.4em" -->
+
+Note: generators are parameterized on three types, `Ref`, `V` and allocator, There is also a polymorphic version in the `pmr` namespace.
 
 ---
 
@@ -1233,12 +1319,15 @@ using Yielded = conditional_t<is_reference_v<Reference>, Reference, const Refere
 
 <!-- .element: data-id="code" style="font-size: 0.4em" -->
 
+See [P2529](https://wg21.link/p2529) for details.
+
 Note: 
+Those are exposition only types but the show the reference and value types of the range.
 - `Yielded`: the type that should be passed to `co_yield`.
 - `Reference`: the type that's returned when iterating
 - `Value`: used primarily by `ranges::to`
 
-`T&&` is the default mainly for performance. See [p2529](https://wg21.link/p2529)
+In particular, the default reference type is an rvalue reference which means the value is moved out when the iterator is dereferenced. `T&&` is the default mainly for performance. 
 
 
 ---
@@ -1264,6 +1353,8 @@ int main() {
 }
 ```
 
+Note: for yielding a sequence, instead of calling `co_yield` in a loop, you can use `elements_of` utility.
+
 ---
 
 ### recursive generator
@@ -1287,6 +1378,9 @@ std::generator<int> visit(const Tree& tree) {
       co_yield std::ranges::elements_of(visit(*tree.right));
 }
 ```
+
+Note: the same utility can be used to generate the elements of a recursive generator. 
+See how elegant this in-order binary tree traversal algorithm looks using `std::generator`.
 
 ---
 
@@ -1327,6 +1421,11 @@ std::println("{}", concat(v1, v2, v3, a, s));
 
 <!-- .element: style="font-size: 0.45em" -->
 
+Note: to me, the most useful thing `std::generator` enables is to easily implement new range adaptors. Here we implement `concat` by generating the elements of the
+first sequence and recursively the elements of all the other ranges. There are of course down sides for going in this route. First, we only get an input range which a
+direct implementation can usually do better. Secondly, there's the overhead of the coroutine mechanism which the compiler is not always able to optimize out. But for
+the sake of this talk, it will work fine. 
+
 ----
 
 <!-- .slide: data-background-image="resources/pov.jpg" -->
@@ -1338,6 +1437,9 @@ std::println("{}", concat(v1, v2, v3, a, s));
 Source: [Mark Sutcliffe](https://www.countryfile.com/go-outdoors/walks/top-10-easy-mountains-for-beginners/)
 
 <!-- .element: style="font-size: 0.5em" -->
+
+Note: As promised, we now come to an important change recently made and that is the definition of the view concept, which as you recall, should be 
+a lightweight range which can be passed around freely between adaptors.
 
 ---
 
@@ -1364,6 +1466,8 @@ concat(Head head, Tail... tail) {
 
 <!-- .element: style="font-size: 0.45em" -->
 
+Note: this adaptor does own all the elements of the given ranges (passed by value), at least until they are moved outside during iteration, so can it be considered a view?
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -1384,6 +1488,9 @@ concept Range<typename T> =
 <!-- .element: data-id="code" -->
     
 [N4128](https:wg21.link//N4128): Ranges for the Standard Library
+
+Note: this is the definition of view from the first paper that introduced ranges to the standard library. Notice the slightly different syntax as this was before
+concepts were finalized. Also, at first, ranges were called iterables and views were, confusingly, called ranges.  
 
 ---
 
@@ -1416,6 +1523,9 @@ concept View =
     
 [P0896](https://wg21.link/P0896): The One Ranges Proposal 
 
+Note: Let's move to the paper which finally got merged into C++20. It defines that a view is a range that is semi-regular (that is default initializable and copyable),
+has constant time copy, move and assignment and has shallow constness which usually means non-ownership.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -1439,14 +1549,17 @@ concept view =
     default_initializable<T> && 
     enable_view<T>;
 
-// has constant time move construction, 
 // move assignment and destruction operators
+// has constant time move construction, 
 // enable_view detects shallow constness
 ```
 
 <!-- .element: data-id="code" -->
     
 [P1456](https://wg21.link/P1456): Move-only views 
+
+Note: from then, a series of papers started relaxing the requirements to support more types of views, like move only views, for viewing unique types like input streams.
+This version also fixes the lack of destruction complexity. Note that this implies that the example we mentioned of a ranging holding its elements by a `shared_ptr` is not a view actually because the last destructor will not have constant time complexity.
 
 ---
 
@@ -1479,6 +1592,8 @@ concept view =
     
 [LWG3326](https://wg21.link/LWG3326): `enable_view` has false positives
 
+Note: it turned out that trying to auto detect views by types having shallow constness had to many false positives, and it was changed to be opt in but specializing the `enable_view` template.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -1508,6 +1623,8 @@ concept view =
     
 [P2325](https://wg21.link/P2325): Views should not be required to be default constructible 
 
+Note: finally, the last change before C++20 dropped the requirement for default constructiblity because there's really no need to force that.
+
 ---
 
 ### viewing r-value containers
@@ -1530,6 +1647,9 @@ auto rng = get_ints()
 ```
 
 <!-- .element: data-id="code" -->
+
+Note: this code tries to create a view of a temporary vector. It doesn't compile in C++20 because the view can not own its elements, otherwise its destructor wouldn't
+have constant time complexity.
 
 ---
 
@@ -1555,6 +1675,8 @@ auto rng = ints
 
 <!-- .element: data-id="code" -->
 
+Note: the alternative is to save the vector in a variable which the view can the reference.
+
 ---
 
 ### `owning_view`
@@ -1563,9 +1685,11 @@ auto rng = ints
 ///hide
 #include <ranges>
 
+namespace ranges = std::ranges;
+
 ///unhide
 template<std::ranges::range T>
-struct owning_view {
+struct owning_view : ranges::view_interface<owning_view<T>> {
     T t;
     
     owning_view(T t) : t(std::move(t)) { }
@@ -1579,6 +1703,8 @@ struct owning_view {
     auto end()   { return end(t); }
 };
 ```
+
+Note: but what would actually go wrong if we defined a (move only) owning view?
 
 ---
 
@@ -1605,6 +1731,10 @@ auto rng = owning_view{get_ints()}
 
 <!-- .element: data-id="code" -->
 
+Note: Has the complexity of the code worsened? We still construct the vector once, move it inside the owning view and destructing it once. 
+The most we added is a couple of moves and avoiding reference semantics might even enable the compiler to make that faster than the lvalue
+version.
+
 ---
 
 ### `views::all`
@@ -1615,6 +1745,8 @@ auto rng = owning_view{get_ints()}
 > - Otherwise, <mark>`owning_­view{E}`</mark>.
 
 <!-- .element: style="text-align: left; width: 100%; font-size: 0.8em" -->
+
+Note: indeed, in C++23 (in fact it was applied to C++20 as a defect report) `views::all`, which is the adaptor that always runs first in a pipeline to convert the input range to a view, now creates an owning view when given an rvalue range.
 
 ---
 
@@ -1647,6 +1779,8 @@ concept view =
     
 [P2415](https://wg21.link/P2415): What is a `view`? 
 
+Note: the way the view concept is now defined by the standard is a fairly complex way to tell that using views should not increase the complexity of the code. 
+
 ---
 
 ### viewing r-value containers
@@ -1668,6 +1802,8 @@ auto rng = get_ints()
          | views::transform([](int i){ return i * i; });
 ```
 
+Note: the first version of this example now compiles and a range holding its elements by a shared_ptr is now indeed a view as well as concat.   
+
 ----
 
 <!-- .slide: data-background-image="resources/piping.jpg" -->
@@ -1681,6 +1817,11 @@ Source: [mybestplace.com](https://www.mybestplace.com/en/article/singing-ringing
 
 <!-- .element: style="font-size: 0.5em" -->
 
+Note: One last C++23 addition we are going to use for the next step in the calendar software is the ability to easily make
+custom views composable using the pipe operator.
+Enabling users to write their own range adaptors that inter-operate well with standard library adaptors, will remove the urgency of adding 
+more adaptors to the standard library. 
+
 ---
 
 ### range adaptor object
@@ -1691,11 +1832,13 @@ Source: [mybestplace.com](https://www.mybestplace.com/en/article/singing-ringing
  range\:|\:adaptor(args...) 
 $$`
 
-<div class="fragment">
-
 e.g. `views::transform`
 
-</div>
+Note: the world of range adaptors have two important concepts. The first is a range adaptor object, such as views::transform that accepts a viewable
+range and optionally more arguments and produces a view over that range. We interact with the adaptor by calling it while passing the range and the 
+other arguments (the first line in the definition) or by only passing the other arguments and calling the result with the range or, more frequently, 
+piping the range in.
+The object resulted from passing only the other arguments has a name...
 
 ---
 
@@ -1703,23 +1846,17 @@ e.g. `views::transform`
 
 <div class="r-stack">
 
-<div class="fragment fade-out" data-fragment-index="1" style="width: 100%">
+<div class="fragment fade-out" data-fragment-index="0" style="width: 100%">
 
 `$$ C(R) \equiv R\:|\:C $$`
-
-<div class="fragment fade-in-then-out" data-fragment-index="0">
 
 e.g. `views::reverse`, `views::transform(f)`
 
 </div>
 
-</div>
-
-<div class="fragment fade-in" data-fragment-index="1" style="width: 100%">
+<div class="fragment fade-in" data-fragment-index="0" style="width: 100%">
 
 `$$ R\:|\:C\:|\:D \equiv R\:|\:(C\:|\:D) $$`
-
-<div class="fragment fade-in" data-fragment-index="2">
 
 ```cpp
 ///hide
@@ -1736,11 +1873,11 @@ auto reverse_trasform(auto f) {
 
 </div>
 
-</div>
 
+Note: and that is a range adaptor closure object, so a unary function object that accepts a `viewable_­range` argument and returns a view 
+  such that the above equation holds. 
 
-Note: a unary function object that accepts a `viewable_­range` argument and returns a view 
-  such that the above equation hold
+A closure composition is itself a closure, so the result of reverse_transform is still composable.
 
 
 ---
@@ -1773,11 +1910,15 @@ std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
 }
 ```
 
+Note: A more complex adaptor, however, is not automatically a closure 
+
+and so trying to pipe a range to it would fail to compile.  
+
 ---
 
 ### `ranges::range_adaptor_closure`
 
-```cpp [1-7|2]
+```cpp [1-7|2,9]
 ///libs=fmt:trunk
 ///fails=no match for 'operator|'
 ///hide
@@ -1786,7 +1927,7 @@ std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
 #include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
 #include "https://godbolt.org/z/n43nMfj58/code/1" // concat
 #include "https://godbolt.org/z/K884c4hza/code/1" // print
-#include "https://godbolt.org/z/9KE5MoMKc/code/1" // closure
+
 namespace ranges = std::ranges;
 namespace views = std::views;
 
@@ -1807,6 +1948,10 @@ std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
 }
 ```
 
+Note: C++23 adds a utility type, range_adaptor_closure, that when deriving from makes a user defined type a closure
+
+so replacing the lambda with a proper function object deriving from `range_adaptor_object` makes this snippet well formed.
+
 ---
 
 ### back to lambda
@@ -1821,12 +1966,6 @@ std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
 #include "https://godbolt.org/z/K884c4hza/code/1" // print
 namespace ranges = std::ranges;
 namespace views = std::views;
-
-namespace std::ranges {
-
-template <typename D>
-using range_adaptor_closure = views::__adaptor::_RangeAdaptorClosure;
-}
 
 ///unhide
 template <typename F>
@@ -1856,11 +1995,16 @@ std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
 }
 ```
 
+Note: of course, we don't want to go back to the pre C++11 days where we had to define a function object before calling an algorithm
+so we can have a generic closure object, wrapping a lambda and forwarding calls into it 
+
+and when defining the lambda, we use `CTAD` to automatically deduce the closure type and we can pipe into it again. 
+
 ---
 
 ### case for adaptor
 
-```cpp [18-24|1-16|26-27]
+```cpp [18-24,26-27|1-16]
 ///libs=fmt:trunk
 ///hide
 #include <ranges>
@@ -1875,12 +2019,6 @@ namespace std {
 
 constexpr inline auto bind_back(auto &&f, auto &&...args) {
     return [=](auto &&...args2) { return f(args2..., args...); };
-}
-
-namespace ranges {
-
-template <typename D>
-using range_adaptor_closure = views::__adaptor::_RangeAdaptorClosure;
 }
 
 }  // namespace std
@@ -1934,6 +2072,14 @@ std::println("{}", std::vector{1, 2, 3, 4}
 }
 ```
 
+Note: if our adaptor takes additional arguments as in this example, than we can wrap it with an adaptor object to make it composable.
+
+We define adaptor as seen here. When called, it checks (at compile time) if it is already invocable, which will happen when the range is passed along the other
+arguments, otherwise it returns a closure to be called later on. 
+
+Note that `closure` and `adaptor`, unlike `range_adaptro_closure` are not standardized because the author, Berry Revzin, wasn't sure their the optimal solution
+but its possible they will be in a future standard.
+
 ---
 
 <!-- .slide: class="aside" -->
@@ -1946,7 +2092,7 @@ std::println("{}", std::vector{1, 2, 3, 4}
 #include <string>
 #include <chrono>
 
-#include <https://godbolt.org/z/MfhP19KfT/code/1> // closure
+#include <https://godbolt.org/z/WG1caxrxn/code/1> // closure
 #include <https://godbolt.org/z/o46E4a9ds/code/1> // to
 
 namespace ranges = std::ranges;
@@ -1988,11 +2134,9 @@ auto start_of_week(date d) {
 }
 }  // namespace detail
 
-using std::views::chunk_by;
-
 ///unhide
 auto by_week() {
-  return chunk_by([](date a, date b) {
+  return views::chunk_by([](date a, date b) {
     return detail::start_of_week(a) == detail::start_of_week(b);
   });
 }
@@ -2027,12 +2171,24 @@ auto layout_months() {
     return concat(
         views::single(month_title(month.front())),
         month | by_week() | format_weeks,
-        views::repeat(empty_week, 6 - week_count) | ranges::to<std::vector>());
+        views::repeat(empty_week, 6 - week_count));
   });
 }
 ```
 
 <!-- .element: style="font-size: 0.4em" -->
+
+Note: we can now continue developing the calender. we stopped with having a list of months which are themselves a list of dates.
+
+To layout each month we concatenate the month title, followed by each week in that month, and padding with empty weeks in case there's less
+than 6, for which we use the C++23 repeat adaptor.
+
+The month title will be the center aligned month name.
+
+To get the weeks we use `chunk_by` adaptor again comparing the first day of the week as there is no standard function to get the week number.
+
+Then to format the list of weeks we right align the first week, and keep the rest left aligned. Here is where we used the closure utility
+for making `format_weeks` composable. We will go back to `format_as_string` later on.
 
 ---
 
@@ -2059,6 +2215,8 @@ auto layout_months() {
 </code>
 </pre>
 
+Note: Thus we go from this list of months
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
@@ -2083,6 +2241,8 @@ auto layout_months() {
 ]
 </code>
 </pre>
+
+to a list of formatted months.
 
 ---
 
@@ -2117,6 +2277,10 @@ auto layout_months() {
 </code>
 </pre>
 
+Note: we then want to print each 3 months side by side, so we chunk the months to groups of size 3. The way we will then tile them is to take
+the first element of each month, which are the titles, and concatenate them. Then we'll take the second elements, which are the first weeks 
+and concatenate them, and so on and so forth.
+
 ----
 
 <!-- .slide: data-background-image="resources/zipping.jpg" -->
@@ -2129,6 +2293,9 @@ auto layout_months() {
 Source: [Simon Emmett Photography](https://www.countryfile.com/go-outdoors/best-fossil-hunting-destinations-uk/)
 
 <!-- .element: style="font-size: 0.5em" -->
+
+Note: The algorithm I just described is called zipping. If you've ever written in python I'm sure you ran into it.
+But even if you never heard of it, this is quiet intuitive. Let's look at a simple example.
 
 ---
 
@@ -2160,7 +2327,43 @@ std::println("student grades are: {}",
 
 <!-- .element: data-id="code" -->
 
-Note: useful for "Structure of arrays" technic
+Note: Assume we have a list of student names and a list of their grades. We can easily pair a student with their grade using the zip adaptor.
+
+---
+
+<!-- .slide: data-auto-animate -->
+
+### grading
+
+```cpp
+///libs=fmt:trunk
+///opts+=-Wno-array-bounds -Wno-stringop-overflow
+///output=[("Joan", 8.5), ("Ben", 7.1), ("Gina", 9), ("Tim", 9.5)]
+///hide
+#include <vector>
+#include <ranges>
+#include <string>
+#include "https://godbolt.org/z/K884c4hza/code/1" // print
+
+int main() {
+using namespace std::literals;
+///unhide
+std::vector names{"Joan"s, "Ben"s, "Gina"s, "Tim"s};
+std::vector grades{8.5, 7.1, 9.0, 9.5};
+
+std::println("student grades are: {}", 
+  std::views::zip(names, grades));
+///hide
+}
+```
+
+<!-- .element: data-id="code" -->
+
+```
+[("Joan", 8.5), ("Ben", 7.1), ("Gina", 9), ("Tim", 9.5)]
+```
+
+Note: As you can see the in the output, each element is a tuple of a `string` and a double. This is very useful for "Structure of arrays" style of programming.
 
 ---
 
@@ -2196,6 +2399,12 @@ std::println("{}", std::views::zip_transform(
 
 <!-- .element: data-id="code" -->
 
+```
+["Joan got 8.5", "Ben got 7.1", "Gina got 9", "Tim got 9.5"]
+```
+
+
+Note: many times we want to do additional processing over the tuples and for that we can use the `zip_transform` adaptor.
 
 ---
 
@@ -2232,6 +2441,9 @@ static_assert(std::same_as<
 
 <!-- .element: data-id="code" -->
 
+Note: As we said the elements of a zip view are tuples over the elements of the source ranges and the reference type is a tuple of all the reference types. 
+Interestingly, it is not a reference by itself. 
+
 ---
 
 ### Sorting
@@ -2267,7 +2479,15 @@ std::println("{}", names);
 
 <!-- .element: data-id="code" -->
 
+```
+["Tim", "Gina", "Joan", "Ben"]
+```
+
+Note: those reference semantics allows us, for example, to sort the list of student names by their grades, descending.
+
 ---
+
+<!-- .slide: data-visibility="hidden" -->
 
 ### rvalue sorting
 
@@ -2298,6 +2518,8 @@ to a const instance.
 
 ---
 
+<!-- .slide: data-visibility="hidden" -->
+
 ### `indirectly_writable`
 
 ```cpp [2, 6-8]
@@ -2321,7 +2543,7 @@ template< class Out, class T >
 
 ---
 
-### more assignment operators
+### more `tuple` assignment operators
 
 ```diff
   // [tuple.assign], tuple assignment
@@ -2341,9 +2563,12 @@ template< class Out, class T >
 
 <!-- .element: style="font-size: 0.45em" -->
 
-Note: same was added to `pair`
+Note: to enable that sorting, they had in fact to make some changes to tuple so it would play nicely with all the range concepts
+and so more assignment operators were added
 
 ---
+
+<!-- .slide: data-visibility="hidden" -->
 
 ### `unique_copy`
 
@@ -2387,7 +2612,7 @@ Source: [range-v3](https://github.com/ericniebler/range-v3/blob/541b06320b89c167
 
 ---
 
-<!-- .slide: data-auto-animate -->
+<!-- .slide: data-visibility="hidden" data-auto-animate -->
 
 ### `unique_copy`
 
@@ -2414,7 +2639,7 @@ ranges::unique_copy(vb,
 
 ---
 
-<!-- .slide: data-auto-animate -->
+<!-- .slide: data-visibility="hidden" data-auto-animate -->
 
 ### `unique_copy`
 
@@ -2445,9 +2670,11 @@ ranges::unique_copy(vb,
 }
 ```
 
-<!-- .element: data-id="code" style="font-size: 0.5em" -->
+<!-- .element: data-visibility="hidden"data-id="code" style="font-size: 0.5em" -->
 
 ---
+
+<!-- .slide: data-visibility="hidden" -->
 
 ### `indirectly_readable`
 
@@ -2483,7 +2710,7 @@ concept indirectly_readable =
 
 ---
 
-### more constructors
+### more `tuple` constructors
 
 ```diff
      // [tuple.cnstr], tuple construction
@@ -2507,6 +2734,9 @@ concept indirectly_readable =
 
 <!-- .element: style="font-size: 0.45em" -->
 
+Note: as well as more constructors, as if that list wasn't long enough, 
+but I guess that's the price you have to pay to make user code cleaner.
+
 
 ---
 
@@ -2527,17 +2757,30 @@ int main()
 {
 ///unhide
 constexpr std::array v {1, 2, 3, 4, 5, 6};
-std::println("v = {}", v); 
+std::println("{}", v); 
 for (auto const [index, window]: 
   std::views::enumerate(v | std::views::adjacent<3>))
 {
-  std::println("w = {:>{}}{}", "", 3*index, window);
+  std::println("{:>{}}{}", "", 3*index, window);
 }
 ///hide
 }
 ```
 
 <!-- .element: data-id="code" -->
+
+```
+[1, 2, 3, 4, 5, 6]
+(1, 2, 3)
+   (2, 3, 4)
+      (3, 4, 5)
+         (4, 5, 6)
+```
+
+<!-- .element: data-id="output" -->
+
+Note: adjacent is like slide, only for compile time size. 
+We also use the new enumerate view which produces pair of elements along with their index.
 
 ---
 
@@ -2558,17 +2801,30 @@ int main()
 {
 ///unhide
 constexpr std::array v {1, 2, 3, 4, 5, 6};
-std::println("v = {}", v); 
+std::println("{}", v); 
 for (auto const [index, window]: 
   std::views::enumerate(v | std::views::pairwise))
 {
-  std::println("w = {:>{}}{}", "", 3*index, window);
+  std::println("{:>{}}{}", "", 3*index, window);
 }
 ///hide
 }
 ```
 
 <!-- .element: data-id="code" -->
+
+```
+[1, 2, 3, 4, 5, 6]
+(1, 2)
+   (2, 3)
+      (3, 4)
+         (4, 5)
+            (5, 6)
+```
+
+<!-- .element: data-id="output" -->
+
+Note: adjacent view with a size of two has an alias called `pairwise`.
 
 ---
 
@@ -2596,6 +2852,14 @@ std::println("all pairs = {}",
 ```
 
 <!-- .element: data-id="code" -->
+
+```
+all pairs = [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (2, 1), ...
+```
+
+<!-- .element: data-id="output" style="font-size: 0.45em" -->
+
+Note: finally, cartesian produce produces all the possible combinations of elements of the source ranges
 
 ---
 
@@ -2650,6 +2914,11 @@ auto transpose_months() {
 }
 ```
 
+Note: going back to building the calendar, we use `zip_transform` along with `concat` to tile the three months of each chunk side by side as we described.
+In eric's implementation, this is called transpose and he used a custom adaptor called `transpose` which is in fact a run-time version of zip, the same way
+that join is a runtime version of concat. This enables his implementation to support customizing the number of months in each row but had I followed the
+same path I wouldn't be able to show `zip` view. 
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
@@ -2683,6 +2952,8 @@ auto transpose_months() {
 </code>
 </pre>
 
+Note: to visualize what we did, this step brings us from this list of groups of 3 months
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
@@ -2699,6 +2970,8 @@ auto transpose_months() {
 ]
 </code>
 </pre>
+
+Note: to this. This now shows almost like the requested output. The only thing left is
 
 ---
 
@@ -2741,6 +3014,8 @@ auto transpose_months() {
 </code>
 </pre>
 
+Note: to join the chunks to get a list of all the lines
+
 ---
 
 <!-- .slide: data-auto-animate class="aside" -->
@@ -2780,6 +3055,8 @@ auto transpose_months() {
 </code>
 </pre>
 
+Note: and the join the lines using the new `join_with` adaptor entering a new line character in between
+
 ----
 
 <!-- .slide: data-background-image="resources/materialize.jpg" -->
@@ -2792,6 +3069,9 @@ auto transpose_months() {
 Source: [pmtoday.co.uk](https://www.pmtoday.co.uk/battersea-power-station-the-project-view/)
 
 <!-- .element: style="font-size: 0.5em" -->
+
+Note: remember `format_as_string`? The reason it's needed is that not all standard library implement range formatting yet 
+so to print the range of characters we ended up with we need to convert that to a string. Luckily, we now have an adaptor for that.
 
 ---
 
@@ -2816,6 +3096,8 @@ auto vec = std::ranges::to<std::vector<int>>(numbers);
 ```
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
+
+Note: this adaptor is called `to` and it converts any range to a container, `vector` of `int`s in this example.
 
 ---
 
@@ -2843,6 +3125,8 @@ auto vec = std::ranges::to<std::vector<int, Alloc>>(numbers, alloc);
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
+Note: it's possible to pass an allocator if you're so inclined.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -2866,6 +3150,8 @@ auto vec = std::ranges::to<std::vector>(numbers);
 ```
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
+
+Note: it also has the nice ability of deducing the element type from the source range's `value_type`
 
 ---
 
@@ -2891,6 +3177,81 @@ auto vec = std::vector{std::from_range, numbers};
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
+Note: to enable this adaptor, all standard containers got new constructors accepting a tag object called `std::from_range` as the first argument.
+
+---
+
+### algorithm
+
+`ranges::to<C>(r, args...)` 
+
+- constructs `C` using the first valid from
+  - `C{r, args...}`
+  - `C{std::from_range, r, args...}`
+  - `C{ranges::begin(r), ranges::end(r), args...}`
+  - `C c{args...}; c.reserve(std::ranges::size(r)); std::ranges::copy(r, std::back_inserter(c));`
+- recurse if needed.
+
+<!-- .element: style="font-size: 0.75em" -->
+
+Note: this is the way `to` works. It first tries to call a constructor accepting the same set of arguments it gets, if that fails to compile, it tries a constructor
+taking `std::from_range`, the third priority is a passing begin and end separately finally resulting on reserve (if the container supports that) followed by repeated push backs. If it gets a nested range it recurses down.
+
+---
+
+<!-- .slide: data-auto-animate -->
+
+### why `from_range_t`?
+
+```cpp
+///compiler=vcpp_v19_latest_x64
+///options=/std:c++latest
+///hide
+#include <ranges>
+#include <vector>
+#include <list>
+
+int main() {
+///unhide
+std::list<int> l; 
+std::vector v{l};
+static_assert(std::same_as<decltype(v), std::vector<std::list<int>>>);
+///hide
+}
+```
+
+<!-- .element: data-id="code" style="font-size: 0.45em" -->
+
+Note: This code deduces a vector of lists of size 1.
+
+---
+
+<!-- .slide: data-auto-animate -->
+
+### why `from_range_t`?
+
+```cpp
+///compiler=vcpp_v19_latest_x64
+///options=/std:c++latest
+///hide
+#include <ranges>
+#include <vector>
+#include <list>
+
+int main() {
+///unhide
+std::list<int> l; 
+std::vector v{std::from_range, l};
+static_assert(std::same_as<decltype(v), std::vector<int>>);
+///hide
+}
+```
+
+<!-- .element: data-id="code" style="font-size: 0.45em" -->
+
+Note: now it is a range of `int`s copied from the list.
+
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -2915,7 +3276,8 @@ auto vec = numbers | std::ranges::to<std::vector>();
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
-Note: nasty error when you forget the parentheses
+Note: as any adaptor, it is composable using the pipe operator. 
+It requires the empty parentheses though, and you can expect nasty errors when you forget them.
 
 ---
 
@@ -2940,6 +3302,8 @@ auto vec = numbers | std::ranges::to<std::vector<double>>();
 ```
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
+
+Note: we can request a container of a different type assuming the `value_type` is convertible 
 
 ---
 
@@ -2976,6 +3340,8 @@ auto map = std::views::zip(names, grades)
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
+Note: a very convenient usage of `to` is to convert a zipped pair to an associative container, using the first sequence as keys and the second as values.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3002,6 +3368,8 @@ auto vec = std::ranges::to<std::vector<std::deque<double>>>(lst);
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
+Note: `to` also supports range of ranges and can be useful for converting between different containers.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3018,19 +3386,19 @@ auto vec = std::ranges::to<std::vector<std::deque<double>>>(lst);
 template<typename T>
 class MyContainer {
 public:
-  MyContainer(std::from_range_t, std::ranges::range auto&& r);
+  MyContainer(std::ranges::range auto&& r);
 
   T* begin() const;
   T* end() const;
 };
 
 template<std::ranges::range Rng>
-MyContainer(std::from_range_t, Rng&& r) 
+MyContainer(Rng&& r) 
   -> MyContainer<std::ranges::range_value_t<Rng>>;
 
 ///hide
 template<typename T>
-MyContainer<T>::MyContainer(std::from_range_t, std::ranges::range auto&& r) {}
+MyContainer<T>::MyContainer(std::ranges::range auto&& r) {}
 
 int main() {
 ///unhide
@@ -3042,44 +3410,7 @@ auto cont = std::ranges::to<MyContainer>(numbers);
 
 <!-- .element: data-id="code" style="font-size: 0.5em" -->
 
----
-
-### algorithm
-
-`ranges::to<C>(r, args...)` 
-
-- constructs `C` using the first valid from
-  - `C{r, args...}`
-  - `C{std::from_range, r, args...}`
-  - `C{ranges::begin(r), ranges::end(r), args...}`
-  - `C c{args...}; c.reserve(std::ranges::size(r)); std::ranges::copy(r, std::back_inserter(c));`
-- recurse if needed.
-
-<!-- .element: style="font-size: 0.75em" -->
-
-Note: calls distance only for supporting containers
-
----
-
-### why `from_range_t`?
-
-```cpp
-///compiler=vcpp_v19_latest_x64
-///options=/std:c++latest
-///hide
-#include <ranges>
-#include <vector>
-#include <list>
-
-int main() {
-///unhide
-std::list<int> l; 
-std::vector v{l};
-///hide
-}
-```
-
-Note: Should `v` be `std::vector<int>` or `std::vector<std::list<int>>` ?
+Note: to support your own custom containers, just make sure one of the appropriate constructors is defined.
 
 ---
 
@@ -3103,7 +3434,43 @@ v.assign_range(std::views::iota(30, 100));
 }
 ```
 
-Note: no `std::array` support yet
+Note: besides additional constructors, we also got more convenience methods to insert ranges to containers. unfortunately, `std::array` is not supported yet.
+
+---
+
+<!-- .slide: class="aside" -->
+
+### `format_as_string`
+
+```cpp
+///hide
+#include <format>
+#include <https://godbolt.org/z/o46E4a9ds/code/1> // to
+
+namespace ranges = std::ranges;
+
+///unhide
+namespace detail {
+template <typename Rng>
+auto format_as_string(const std::string_view fmt, Rng&& rng) {
+  return std::vformat(fmt, std::make_format_args(
+#if __cpp_lib_format_ranges < 202207L
+    std::forward<Rng>(rng) | ranges::to<std::string>()
+#else
+  std::forward<Rng>(rng)
+#endif
+  ));
+}
+}  // namespace detail
+```
+
+Note: here is the implementation of `format_as_string`. If ranges formatting is supported I use that, otherwise, I convert the range to a string.
+
+---
+
+<!-- .slide: class="aside" -->
+
+# live demo
 
 ----
 
@@ -3118,11 +3485,15 @@ Source: [wessexcoastgeology.soton.ac.uk](https://wessexcoastgeology.soton.ac.uk/
 
 <!-- .element: style="font-size: 0.5em" -->
 
+Note: remember how `std::accumulate` didn't have a ranges version in C++20? now we can forget about accumulate because C++23 
+has an even better algorithms for folding a sequence, which is what accumulate actually does. We didn't need it for calendar
+but I think it's too important to not mention it in this talk.
+
 ---
 
 ### `std::fold_left`
 
-```cpp [1-3]
+```cpp [5-7]
 ///hide
 #include <ranges>
 using std::input_iterator;
@@ -3145,13 +3516,13 @@ constexpr auto fold_left(R&& r, T init, F f);
 
 `$$ f(f(f(f(init, x_1), x_2), ...), x_n) $$`
 
-Note: function is not defaulted to `std::plus`
+Note: this is in fact a whole family of algorithms, starting with `fold_left` that takes an initial value and a binary callable and executes the callable on the initial value and the first element of the sequence. It then takes the result of that and plugs it into the callable along with the second element, and so on. 
 
 ---
 
 ### examples
 
-```cpp [1|3-6|3,8-9]
+```cpp [1,4-6|1,4,8-9]
 ///libs=fmt:trunk
 ///output=sum: 36\nmul: 40320
 #include <algorithm>
@@ -3175,11 +3546,15 @@ std::println("mul: {}", mul);
 
 <!-- .element: style="font-size: 0.52em" -->
 
+Note: those algorithms live in the `algorithm` header, not `numeric`.
+
+If you pass `std::plus` to `fold_left` you get accumulate back, but the function is not defaulted to `std::plus` because this algorithm is useful for much more than addition for example multiplication.
+
 ---
 
 ### examples
 
-```cpp [2-4,9|5-9]
+```cpp [2-9]
 ///libs=fmt:trunk
 ///output=f(f(f(f(f(f(f(f(f(f(init,x₀),x₁),x₂),x₃),x₄),x₅),x₆),x₇),x₈),x₉)
 ///hide
@@ -3209,6 +3584,8 @@ std::println("{}",
 ///hide
 }
 ```
+
+Note: but not just math operations. we can use it to format the range in interesting ways. anyone want to guess what this prints?
 
 ---
 
@@ -3240,11 +3617,14 @@ count_if( I first, S last, Pred pred, Proj proj = {} ) {
 
 <!-- .element: style="font-size: 0.5em" -->
 
+Note: in fact, many of the standard algorithms could be implemented using `fold`. Let's look at `count_if` for example. we want to count how many times the
+predicate returns true, so the initial value is 0 and we increment the accumulator every time the predicate returns true, otherwise, we keep it the same.
+
 ---
 
 ### `std::fold_right`
 
-```cpp [1-3]
+```cpp [5-7]
 ///hide
 #include <ranges>
 using std::bidirectional_iterator;
@@ -3269,11 +3649,13 @@ constexpr auto fold_right(R&& r, T init, F f);;
 
 `$$ f(x_1, f(x_2, ...f(x_n, init))) $$`
 
+Note: symmetrically, we have `fold_right`, that pass `init` as the right argument and also iterates the sequence in reverse order.
+
 ---
 
 ### examples
 
-```cpp [2-4,9|5-9]
+```cpp [2-9]
 ///libs=fmt:trunk
 ///output=f(x₀,f(x₁,f(x₂,f(x₃,f(x₄,f(x₅,f(x₆,f(x₇,f(x₈,f(x₉,init))))))))))
 ///hide
@@ -3334,6 +3716,8 @@ std::println("{}",
 }
 ```
 
+Note: I couldn't think of any obvious case where you'd need `fold_right` but we can do the same trick as before to print its definition.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3364,6 +3748,8 @@ constexpr std::ranges::range_value_t<R> min( R&& r ) {
 
 <!-- .element: data-id="code" -->
 
+Note: let's now try implement the `min` algorithm using fold_left. what would be the initial value?
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3390,6 +3776,9 @@ constexpr std::ranges::range_value_t<R> min( R&& r ) {
 
 <!-- .element: data-id="code" -->
 
+Note: the first element. but now we compare the first element to itself, which is redundant and also limit ourselves to forward ranges because we call begin
+twice.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3414,6 +3803,9 @@ constexpr std::ranges::range_value_t<R> min( R&& r ) {
 ```
 
 <!-- .element: data-id="code" -->
+
+Note: that the motivation for an additional algorithm in this family, `fold_left_first` which takes no initial value and just starts calling
+the function on the first two elements. 
 
 ---
 
@@ -3442,6 +3834,9 @@ constexpr std::ranges::range_value_t&lt;R&gt; min( R&& r ) {
 
 <!-- .element: data-id="code" -->
 
+Note: to support empty sequences, it has to return an optional, so we actually need to dereference it to get the value.
+This will result in undefined behavior if the range is empty but that's how the standard min is defined.
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3469,6 +3864,9 @@ auto [_, total] = ranges::fold_left(numbers, 0, std::plus<>{});
 
 <!-- .element: class="fragment" data-id="code" style="font-size: 0.45em" -->
 
+Note: remember this law? to follow it we'd need to return the end iterator along with the result of folding but that would make every call site cumbersome,
+because in 99% of the cases the caller has no use for that. 
+
 ---
 
 <!-- .slide: data-auto-animate -->
@@ -3495,6 +3893,8 @@ auto [it, total] = ranges::fold_left_with_iter(numbers, 0, std::plus<>{});
 
 <!-- .element: data-id="code" style="font-size: 0.45em" -->
 
+Note: for that the standard provides `fold_left_with_iter` which returns the end iterator.
+
 ---
 
 ### all the folds
@@ -3509,6 +3909,18 @@ auto [it, total] = ranges::fold_left_with_iter(numbers, 0, std::plus<>{});
 | `fold_left_first_with_iter` | left | - | (`it`, `T`) |
 
 <!-- .element: style="font-size: 0.7em" -->
+
+Note: this table shows all the fold family in C++ 23.
+
+----
+
+## resources
+
+- C++23 calendar: https://godbolt.org/z/qvqW8vYrq
+- range-v3 calendar: https://github.com/ericniebler/range-v3/blob/master/example/calendar.cpp
+- Eric's 2015 talk: https://youtu.be/mFUXNMfaciE
+- Berry's 2022 talk about ranges formatting: https://youtu.be/EQELdyecZlU
+- A Plan for C++23 Ranges: https://wg21.link/p2214
 
 ----
 
