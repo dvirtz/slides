@@ -9,7 +9,20 @@ highlightTheme: atom-one-dark
 
 <!-- .slide: data-background-image="resources/title.png" -->
 
-Note:  hello and welcome to my talk about C++ 23 ranges. My name is Dvir, I recently moved to live in Manchester here in the UK and I work for Roku.
+Note:  hello and welcome to my talk about C++ 23 ranges. 
+
+---
+
+https://dvirtz.github.io/slides/ranges_23/ranges.md
+
+![QR code](resources/qr-code.png)
+
+<!-- .element: class="r-stretch" -->
+
+Note: Before we start, slides are available online already on github. You can go to this link or scan this QR code to 
+see the slides in your own device. 
+
+My name is Dvir, I recently moved to live in Manchester here in the UK and I work for Roku.x
 
 ----
 
