@@ -13,7 +13,7 @@ Note:  hello and welcome to my talk about C++ 23 ranges.
 
 ---
 
-https://dvirtz.github.io/slides/ranges_23/ranges.md
+https://dvirtz.github.io/slides/ranges_23/ranges.html
 
 ![QR code](resources/qr-code.png)
 
