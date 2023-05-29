@@ -7,15 +7,39 @@ revealOptions:
 highlightTheme: atom-one-dark
 ---
 
-<!-- .slide: data-background-image="resources/accu_title.png" -->
+<!-- .slide: data-background="resources/view-from-snowdon-summit.jpeg" -->
+
+<div class="r-stretch">
+
+# C++23 ranges
+
+<!-- .element: style="color: #20263c" -->
+
+### conceptual changes and useful practicalities
+
+<!-- .element: style="color: #194876" -->
+
+Dvir Yitzchaki
+
+<!-- .element: style="color: rgb(233, 233, 223)" -->
+
+</div>
+
+Core C++, June 2023
+
+<!-- .element: style="color: rgb(233, 233, 223)" -->
+
+Source: [muchbetteradventures.com](https://www.muchbetteradventures.com/magazine/climbing-snowdon/)
+
+<!-- .element: style="font-size: 0.5em" -->
 
 Note:  hello and welcome to my talk about C++ 23 ranges. 
 
 ---
 
-https://dvirtz.github.io/slides/ranges_23/ranges.html
+https://dvirtz.github.io/slides/ranges_23/corecpp.html
 
-![QR code](resources/accu-qr-code.png)
+![QR code](resources/corecpp-qr-code.png)
 
 <!-- .element: class="r-stretch" -->
 
@@ -224,7 +248,7 @@ Another important concept is a common range which is a range whose iterator and 
 
 now constrained with concepts:
 
-```cpp [|2,6,10,14|5,13]
+```cpp [|2,6,10,14]
 ///compiler=g102
 ///options=-std=c++2a
 ///hide
@@ -262,19 +286,6 @@ and a sentinel and one that takes a single range argument. Usually, you'll just 
 
 ---
 
-<!-- .slide: data-auto-animate -->
-
-> The law of useful return: 
->
-> A procedure should return all the potentially useful information it computed.
-
-<p style="width: 100%; text-align: right;"> <cite> Alexander Stepanov </cite> </p>
-
-Note: some of the algorithms also have a different return type than their C++17 counterparts and that's due to this law of useful return, coined by Alexander Stepanov,
-that states that and data computed by a function which is potentially useful for the caller should be returned.
-
----
-
 ## range
 
 a type we can feed to
@@ -288,43 +299,6 @@ A range `[i, s)` refers to the elements
 such that j == s.
 
 Note: this `j` here, which is the end iterator is a potentially useful data which the caller doesn't have and so should be returned. Think on parsing for example, where we want to know where the current token ends.
-
----
-
-## return value
-
-```cpp [4,5]
-///compiler=g102
-///options=-std=c++2a
-///hide
-#include <concepts>
-#include <utility>
-
-///unhide
-namespace std::ranges {
-template<class I, class F>
-struct for_each_result {
-  [[no_unique_address]] I in;
-  [[no_unique_address]] F fun;
-
-  template<class I2, class F2>
-  requires convertible_to<const I&, I2> && convertible_to<const F&, F2>
-  operator for_each_result<I2, F2>() const & {
-    return {in, fun};
-  }
-
-  template<class I2, class F2>
-  requires convertible_to<I, I2> && convertible_to<F, F2>
-  operator for_each_result<I2, F2>() && {
-    return {std::move(in), std::move(fun)};
-  }
-};
-}
-```
-
-<!-- .element: style="font-size: 0.4em" -->
-
-Note: in addition to returning the function, `for_each` now returns the end iterator.
 
 ---
 
@@ -632,112 +606,9 @@ std::println("{}", std::map&lt;int, int&gt;{{1, 2}, {3, 4}});
 Note: A really nice addition, not directly related to ranges is `std::println` which, as you probably guessed, prints the data followed by a new line.
 We now have the ability to print standard containers. Different types use different formatting by default. `vector` is formatted using square brackets. 
 Associative containers like `set`, use curly braces. `tuple`s and `pair`s have parentheses and `std::map` is printed as a list of key colon value.
----
 
-<!-- .slide: data-auto-animate -->
-
-### format specifiers
-
-```nohighlight
-"{ arg-id (optional) }"
-"{ arg-id (optional) : format-spec }"
-```
-
-<!-- .element: data-id="formats" -->
-
-Note: to customize the formatting, use use what's called a format specifier, which in C++20 was a pair of curly braces, optionally containing an index for the
-argument you want to be put in this place, followed by colon and some text which tells the format library exactly how to format this argument, like width and 
-precision.
-
----
-
-<!-- .slide: data-auto-animate -->
-
-### nested
-### format specifiers
-
-```nohighlight
-"{ arg-id (optional) }"
-"{ arg-id (optional) : format-spec }"
-"{ arg-id (optional) : format-spec : format-spec }"
-"{ arg-id (optional) : format-spec : format-spec : format-spec }"
-```
-
-<!-- .element: data-id="formats" -->
-
-Note: for formatting a range's elements we add an additional colon format-spec. and if that's a range of ranges we can add more format specs this way as needed.
-
----
-
-### Examples
-
-<pre>
-<code class="lang-cpp" data-trim data-line-numbers="1|2|3|4" data-fragment-index="1">
-///compiler=clang_trunk
-///options+=-std=c++2b -stdlib=libc++ -fexperimental-library
-///output=[1, 2, 3]\n[1, 2, 3]\n###########[1, 2, 3]\n#####[0x1, 0x2, 0x3]
-///hide
-#include &lt;https://godbolt.org/z/Yv18W39YM/code/1&gt; // print
-#include &lt;vector&gt;
-
-int main() {
-///unhide
-std::println("{}",         std::vector{1, 2, 3});
-std::println("{:}",        std::vector{1, 2, 3});
-std::println("{:#>20}",    std::vector{1, 2, 3});
-std::println("{:#>20:#x}", std::vector{1, 2, 3});
-///hide
-}
-</code>
-</pre>
-
-<pre>
-<code class="lang-HTML" data-trim data-line-numbers="1|2|3|4" data-fragment-index="1">
-[1, 2, 3]
-[1, 2, 3]
-##########[1, 2, 3]
-####[0x1, 0x2, 0x3]
-</code>
-</pre>
-
-Note: The first and second line print vector according to the default formatting. on the third line we specify to print that vector right aligned in a 20 character space,
-padded by hashes. On the last line, in addition, we specify that the elements should be formatted as hexadecimal numbers. The width, alignment and padding of the range
-are kept.  
-
----
-
-### Customization
-
-<pre>
-<code class="lang-cpp" data-trim data-line-numbers="1|2|3" data-fragment-index="1">
-///compiler=clang_trunk
-///options+=-std=c++2b -stdlib=libc++ -fexperimental-library
-///output="A\tCCU"\n"C++": 23\n1, 2, 3
-///hide
-#include &lt;https://godbolt.org/z/Yv18W39YM/code/1&gt; // print
-#include &lt;tuple&gt;
-#include &lt;set&gt;
-
-int main() {
-  using namespace std::literals;
-///unhide
-std::println("{:?}",  "A\tCCU"s);
-std::println("{:m}",  std::pair{"C++", 23});
-std::println("{:n}",  std::set{1, 2, 3});
-///hide
-}
-</code>
-</pre>
-
-<pre>
-<code class="lang-HTML" data-trim data-line-numbers="1|2|3" data-fragment-index="1">
-"A\tCCU"
-"C++": 23
-1, 2, 3
-</code>
-</pre>
-
-Note: there are new format specifies like question mark for escaping a string, `m` for printing a pair as a key colon value and `n` for omitting the outer delimiters.
+There are ways to customize these but we won't have time today to go over them. 
+I can recommends Barry Revzin's talk from CppCon 2022 on that.
 
 ----
 
@@ -1018,59 +889,6 @@ std::println("{}", v | std::views::stride(2));
 
 ---
 
-### generic?
-
-| Algorithm | Step | Size | Partial |
-|-----------|------|------|-----|
-| generic	| n |	k	 | b |
-| chunk	| k	| k	| true |
-| slide	| 1	| k	| false |
-| stride	| k |	1 |	N/A |
-
-Note: You might notice that in fact all those adaptors are a specialization of a generic windowing view which can have arbitrary size, step and whether we want partial chunks at the end, which brings up the question of why the standard provides this generic version and implement all the others using it and the answer is that it would make each of them use more space for the unneeded parameters and also that calling this hypothetical algorithms would require two numbers and a bool and since we don't have named arguments would obfuscate calling code.
-
-
----
-
-### windowed
-
-```cpp
-///libs=fmt:trunk
-///output=[[0, 1, 2, 3, 4], [3, 4, 5, 6, 7], [6, 7, 8, 9, 10], [9, 10, 11, 12, 13], [12, 13, 14, 15, 16], [15, 16, 17, 18, 19]]
-///hide
-#include <https://godbolt.org/z/K884c4hza/code/1> // print
-#include <ranges>
-
-///unhide
-namespace args {
-struct windowed {
-    std::size_t size;
-    std::size_t stride;
-};
-}  // namespace args
-constexpr auto windowed(args::windowed args) {
-    using namespace std::views;
-    return slide(args.size) | stride(args.stride);
-}
-
-///hide
-int main() {
-///unhide
-std::println("{}",
-              std::views::iota(0, 20) 
-              | windowed({.size = 5, .stride = 3}));
-///hide
-}
-```
-
-```
-[[0, 1, 2, 3, 4], [3, 4, 5, 6, 7], [6, 7, 8, 9, 10], ...
-```
-
-Note: it is strait forward, however, to implement a generic windowing adaptor by combining slide and stride like this. supporting the third parameter is left as an exercise for the viewers. Notice the usage of designated initializers to emulate named arguments.
-
----
-
 <!-- .slide: data-auto-animate -->
 
 ### `views::chunk_by`
@@ -1124,35 +942,6 @@ std::println("{}", v | views::chunk_by(less_equal{}));
 ```
 
 Note: in this example, we produce a list of the monotonically increasing sub-sequences of the input range.
-
----
-
-### unlike `range-v3`'s `group_by`
-
-
-```cpp
-///libs=rangesv3:trunk,fmt:trunk
-///output=[[1, 2, 2, 3, 1, 2], [0, 4, 5, 2]]
-///hide
-#include <https://godbolt.org/z/K884c4hza/code/1> // print
-#include <range/v3/view/group_by.hpp>
-#include <vector>
-
-int main() {
-///unhide
-using namespace ranges;
-std::vector v = {1, 2, 2, 3, 1, 2, 0, 4, 5, 2};
-std::println("{}", v | views::group_by(less_equal{}));
-///hide
-}
-```
-
-```
-[[1, 2, 2, 3, 1, 2], [0, 4, 5, 2]]
-```
-
-Note: if you are a range-v3 user, it used to have a `group_by` adaptor which has a slightly different behavior. 
-This is now deprecated and replaced by `chunk_by` as well.
 
 ---
 
@@ -1240,14 +1029,22 @@ into coroutines in this talk. For that you gave other talks in this conference b
 
 ### `std::generator`
 
-```cpp [1-8|10-11]
+<!-- .slide: data-auto-animate -->
+
+```cpp [1-8]
+///compiler=clang_trunk
+///options=-std=c++2b -stdlib=libc++
+///output=[8, 13, 21]
 ///hide
+#include <version>
+#include "https://godbolt.org/z/7YosK46vo/code/1" // println
+
 #if __has_include(<generator>)
 ///unhide
 #include <generator>
 ///hide
 #else
-#include <https://godbolt.org/z/YrdWqrMTv/code/1> // generator
+#include <https://godbolt.org/z/cq7vjWh3P/code/1> // generator
 #endif
 ///unhide
 
@@ -1261,8 +1058,8 @@ std::generator<int> fib() {
 ///hide
 int main() {
 ///unhide
-auto rng = fib() | std::views::drop(6) | std::views::take(3);
-return std::ranges::fold_left(std::move(rng), 0, std::plus{});
+std::println("{}", 
+             fib() | std::views::drop(6) | std::views::take(3));
 ///hide
 }
 ```
@@ -1270,6 +1067,51 @@ return std::ranges::fold_left(std::move(rng), 0, std::plus{});
 <!-- .element: style="font-size: 0.5em" -->
 
 Note: this is a classic fibonacci sequence implemented using coroutines. the resulting range is a move-only input range. This is because the coroutine state, held by the generator, is a unique resource.
+
+---
+
+### `std::generator`
+
+<!-- .slide: data-auto-animate -->
+
+```cpp [10-11]
+///compiler=clang_trunk
+///options=-std=c++2b -stdlib=libc++
+///output=[8, 13, 21]
+///hide
+#include <version>
+#include "https://godbolt.org/z/7YosK46vo/code/1" // println
+
+#if __has_include(<generator>)
+///unhide
+#include <generator>
+///hide
+#else
+#include <https://godbolt.org/z/cq7vjWh3P/code/1> // generator
+#endif
+///unhide
+
+std::generator<int> fib() {
+    auto a = 0, b = 1;
+    while (true) {
+        co_yield std::exchange(a, std::exchange(b, a + b));
+    }
+}
+
+///hide
+int main() {
+///unhide
+std::println("{}", 
+             fib() | std::views::drop(6) | std::views::take(3));
+///hide
+}
+```
+
+<!-- .element: style="font-size: 0.5em" -->
+
+```
+[8, 13, 21]
+```
 
 ---
 
@@ -3484,6 +3326,38 @@ Note: here is the implementation of `format_as_string`. If ranges formatting is 
 
 ----
 
+## resources
+
+- C++23 calendar: https://godbolt.org/z/qvqW8vYrq
+- range-v3 calendar: https://github.com/ericniebler/range-v3/blob/master/example/calendar.cpp
+- Eric's 2015 talk: https://youtu.be/mFUXNMfaciE
+- Berry's 2022 talk about ranges formatting: https://youtu.be/EQELdyecZlU
+- A Plan for C++23 Ranges: https://wg21.link/p2214
+
+----
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 50% 20% 30%; font-size: 75%">
+
+# Thank you
+
+<!-- .element: style="grid-column: 1 / 4; font-size: calc(2*var(--r-heading1-size));" -->
+
+![gmail](resources/Gmail_icon_(2020).png)
+
+![github](resources/github-mark-white.png)
+
+![twitter](resources/twitter.png)
+
+[dvirtz@gmail.com](mailto:dvirtz@gmail.com)
+
+[github.com/dvirtz](https://github.com/dvirtz)
+
+[@dvirtzwastaken](https://twitter.com/dvirtzwastaken)
+
+</div>
+
+----
+
 <!-- .slide: data-background-image="resources/folding.png" -->
 
 
@@ -3921,16 +3795,6 @@ Note: for that the standard provides `fold_left_with_iter` which returns the end
 <!-- .element: style="font-size: 0.7em" -->
 
 Note: this table shows all the fold family in C++ 23.
-
-----
-
-## resources
-
-- C++23 calendar: https://godbolt.org/z/qvqW8vYrq
-- range-v3 calendar: https://github.com/ericniebler/range-v3/blob/master/example/calendar.cpp
-- Eric's 2015 talk: https://youtu.be/mFUXNMfaciE
-- Berry's 2022 talk about ranges formatting: https://youtu.be/EQELdyecZlU
-- A Plan for C++23 Ranges: https://wg21.link/p2214
 
 ----
 
