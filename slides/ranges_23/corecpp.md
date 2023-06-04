@@ -505,42 +505,6 @@ a range of years to generate a calender of, we produce a list of all the dates b
 
 ---
 
-<!-- .slide: data-auto-animate class="aside" -->
-
-### listing the days
-
-```cpp [9-12]
-///hide
-#include <chrono>
-#include <ranges>
-
-namespace views = std::views;
-
-template <typename Clock, typename Duration>
-struct std::incrementable_traits<std::chrono::time_point<Clock, Duration>> {
-  using difference_type = typename Duration::rep;
-};
-///unhide
-using date = std::chrono::year_month_day;
-
-auto first_day(std::chrono::year year) {
-  using namespace std::literals;
-  using std::chrono::January;
-  return std::chrono::sys_days{year / January / 1d};
-}
-
-auto dates_from(std::chrono::year year) {
-  return views::iota(first_day(year)) |
-         views::transform([](const auto day) { return date{day}; });
-}
-```
-
-<!-- .element: data-id="code" style="font-size: 0.45em" -->
-
-Note: we will also support generating an infinite calendar starting from a given year and we use the infinite version of iota for that.
-
----
-
 <!-- .slide: class="aside" -->
 
 ### `dates()`
@@ -1068,122 +1032,6 @@ std::println("{}",
 
 Note: this is a classic fibonacci sequence implemented using coroutines. the resulting range is a move-only input range. This is because the coroutine state, held by the generator, is a unique resource.
 
----
-
-### `std::generator`
-
-<!-- .slide: data-auto-animate -->
-
-```cpp [10-11]
-///compiler=clang_trunk
-///options=-std=c++2b -stdlib=libc++
-///output=[8, 13, 21]
-///hide
-#include <version>
-#include "https://godbolt.org/z/7YosK46vo/code/1" // println
-
-#if __has_include(<generator>)
-///unhide
-#include <generator>
-///hide
-#else
-#include <https://godbolt.org/z/cq7vjWh3P/code/1> // generator
-#endif
-///unhide
-
-std::generator<int> fib() {
-    auto a = 0, b = 1;
-    while (true) {
-        co_yield std::exchange(a, std::exchange(b, a + b));
-    }
-}
-
-///hide
-int main() {
-///unhide
-std::println("{}", 
-             fib() | std::views::drop(6) | std::views::take(3));
-///hide
-}
-```
-
-<!-- .element: style="font-size: 0.5em" -->
-
-```
-[8, 13, 21]
-```
-
----
-
-<!-- .slide: data-auto-animate -->
-
-### `std::generator`
-
-```cpp [1-6|8-12]
-///hide
-#include <memory_resource>
-
-///unhide
-template<
-    class Ref,
-    class V = void,
-    class Allocator = void
->
-class generator;
-
-namespace pmr {
-template< class Ref, class V = void >
-using generator =
-    generator<Ref, V, std::pmr::polymorphic_allocator<>>;
-}
-```
-
-<!-- .element: data-id="code" style="font-size: 0.4em" -->
-
-Note: generators are parameterized on three types, `Ref`, `V` and allocator, There is also a polymorphic version in the `pmr` namespace.
-
----
-
-<!-- .slide: data-auto-animate -->
-
-### `std::generator`
-
-```cpp [8-10]
-///hide
-#include <memory_resource>
-#include <type_traits>
-
-using std::is_void_v;
-using std::remove_cvref_t;
-using std::is_reference_v;
-using std::conditional_t;
-///unhide
-template<
-    class Ref,
-    class V = void,
-    class Allocator = void
->
-class generator {
-
-using Value = conditional_t<is_void_v<V>, remove_cvref_t<Ref>, V>; 
-using Reference = conditional_t<is_void_v<V>, Ref&&, Ref>; 
-using Yielded = conditional_t<is_reference_v<Reference>, Reference, const Reference&>;
-
-};
-```
-
-<!-- .element: data-id="code" style="font-size: 0.4em" -->
-
-See [P2529](https://wg21.link/p2529) for details.
-
-Note: 
-Those are exposition only types but the show the reference and value types of the range.
-- `Yielded`: the type that should be passed to `co_yield`.
-- `Reference`: the type that's returned when iterating
-- `Value`: used primarily by `ranges::to`
-
-In particular, the default reference type is an rvalue reference which means the value is moved out when the iterator is dereferenced. `T&&` is the default mainly for performance. 
-
 
 ---
 
@@ -1657,283 +1505,7 @@ auto rng = get_ints()
          | views::transform([](int i){ return i * i; });
 ```
 
-Note: the first version of this example now compiles and a range holding its elements by a shared_ptr is now indeed a view as well as concat.   
-
-----
-
-<!-- .slide: data-background-image="resources/piping.jpg" -->
-
-## Piping user-defined range adaptors
-
-<!-- .element: class="r-stretch" style="text-shadow: 2px 2px 2px black; color: #fea98e" -->
-
-
-Source: [mybestplace.com](https://www.mybestplace.com/en/article/singing-ringing-tree-the-tree-that-sings-with-the-blowing-wind)
-
-<!-- .element: style="font-size: 0.5em" -->
-
-Note: One last C++23 addition we are going to use for the next step in the calendar software is the ability to easily make
-custom views composable using the pipe operator.
-Enabling users to write their own range adaptors that inter-operate well with standard library adaptors, will remove the urgency of adding 
-more adaptors to the standard library. 
-
----
-
-### range adaptor object
-
-`$$
- adaptor(range, args...) \equiv \\
- adaptor(args...)(range) \equiv \\
- range\:|\:adaptor(args...) 
-$$`
-
-e.g. `views::transform`
-
-Note: the world of range adaptors have two important concepts. The first is a range adaptor object, such as views::transform that accepts a viewable
-range and optionally more arguments and produces a view over that range. We interact with the adaptor by calling it while passing the range and the 
-other arguments (the first line in the definition) or by only passing the other arguments and calling the result with the range or, more frequently, 
-piping the range in.
-The object resulted from passing only the other arguments has a name...
-
----
-
-### range adaptor closure object
-
-<div class="r-stack">
-
-<div class="fragment fade-out" data-fragment-index="0" style="width: 100%">
-
-`$$ C(R) \equiv R\:|\:C $$`
-
-e.g. `views::reverse`, `views::transform(f)`
-
-</div>
-
-<div class="fragment fade-in" data-fragment-index="0" style="width: 100%">
-
-`$$ R\:|\:C\:|\:D \equiv R\:|\:(C\:|\:D) $$`
-
-```cpp
-///hide
-#include <ranges>
-namespace views = std::views;
-
-///unhide
-auto reverse_trasform(auto f) {
-  return views::reverse | views::transform(f);
-}
-```
-
-</div>
-
-</div>
-
-
-Note: and that is a range adaptor closure object, so a unary function object that accepts a `viewable_­range` argument and returns a view 
-  such that the above equation holds. 
-
-A closure composition is itself a closure, so the result of reverse_transform is still composable.
-
-
----
-
-## more complex example
-
-```cpp [1 -4|6]
-///libs=fmt:trunk
-///fails=no match for 'operator|'
-///hide
-#include <ranges>
-#include <vector>
-#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
-#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
-namespace ranges = std::ranges;
-namespace views = std::views;
-
-///unhide
-auto reverse_tail = [](ranges::forward_range auto&& R) {
-  return concat(R | views::take(1), 
-                R | views::drop(1) | views::reverse);
-};
-
-///hide
-int main() {
-///unhide
-std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
-///hide
-}
-```
-
-Note: A more complex adaptor, however, is not automatically a closure 
-
-and so trying to pipe a range to it would fail to compile.  
-
----
-
-### `ranges::range_adaptor_closure`
-
-```cpp [1-7|2,9]
-///libs=fmt:trunk
-///fails=no match for 'operator|'
-///hide
-#include <ranges>
-#include <vector>
-#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
-#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
-
-namespace ranges = std::ranges;
-namespace views = std::views;
-
-///unhide
-struct reverse_tail_fn 
-  : std::ranges::range_adaptor_closure<reverse_tail_fn> {
-  auto operator()(ranges::forward_range auto&& R) {
-    return concat(R | views::take(1), 
-                  R | views::drop(1) | views::reverse);
-  };
-}  reverse_tail;
-
-///hide
-int main() {
-///unhide
-std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
-///hide
-}
-```
-
-Note: C++23 adds a utility type, range_adaptor_closure, that when deriving from makes a user defined type a closure
-
-so replacing the lambda with a proper function object deriving from `range_adaptor_object` makes this snippet well formed.
-
----
-
-### back to lambda
-
-```c++ [1-13|15-20]
-///libs=fmt:trunk
-///hide
-#include <ranges>
-#include <vector>
-#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
-#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
-namespace ranges = std::ranges;
-namespace views = std::views;
-
-///unhide
-template <typename F>
-class closure 
-  : public std::ranges::range_adaptor_closure<closure<F>> {
-    F f;
-public:
-    constexpr closure(F f) : f(f) { }
-
-    template <std::ranges::viewable_range R>
-        requires std::invocable<F const&, R>
-    constexpr auto operator()(R&& r) const {
-        return f(std::forward<R>(r));
-    }
-};
-
-closure reverse_tail = [](ranges::forward_range auto&& R) {
-  return concat(R | views::take(1), 
-                R | views::drop(1) | views::reverse);
-};
-
-///hide
-int main() {
-///unhide
-std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
-///hide
-}
-```
-
-Note: of course, we don't want to go back to the pre C++11 days where we had to define a function object before calling an algorithm
-so we can have a generic closure object, wrapping a lambda and forwarding calls into it 
-
-and when defining the lambda, we use `CTAD` to automatically deduce the closure type and we can pipe into it again. 
-
----
-
-### case for adaptor
-
-```cpp [18-24,26-27|1-16]
-///libs=fmt:trunk
-///hide
-#include <ranges>
-#include <vector>
-#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
-#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
-namespace ranges = std::ranges;
-namespace views = std::views;
-
-namespace std {
-
-constexpr inline auto bind_back(auto &&f, auto &&...args) {
-    return [=](auto &&...args2) { return f(args2..., args...); };
-}
-
-}  // namespace std
-
-template <typename F>
-class closure 
-  : public std::ranges::range_adaptor_closure<closure<F>> {
-    F f;
-public:
-    constexpr closure(F f) : f(f) { }
-
-    template <std::ranges::viewable_range R>
-        requires std::invocable<F const&, R>
-    constexpr auto operator()(R&& r) const {
-        return f(std::forward<R>(r));
-    }
-};
-
-///unhide
-template <typename F>
-class adaptor {
-    F f;
-public:
-    constexpr adaptor(F f) : f(f) { }
-
-    template <typename... Args>
-    constexpr auto operator()(Args&&... args) const {
-        if constexpr (std::invocable<F const&, Args...>) {
-            return f(std::forward<Args>(args)...);
-        } else {
-            return closure(std::bind_back(f, 
-              std::forward<Args>(args)...));
-        }
-    }
-};
-
-adaptor reverse_transform_tail = 
-  [](ranges::forward_range auto&& r, auto&& f) {
-  return concat(r | views::take(1), 
-                r | views::drop(1) 
-                  | views::reverse 
-                  | views::transform(f));
-};
-
-///hide
-int main() {
-///unhide
-std::println("{}", std::vector{1, 2, 3, 4} 
-  | reverse_transform_tail(std::identity{}));
-///hide
-}
-```
-
-Note: if our adaptor takes additional arguments as in this example, than we can wrap it with an adaptor object to make it composable.
-
-We define adaptor as seen here. When called, it checks (at compile time) if it is already invocable, which will happen when the range is passed along the other
-arguments, otherwise it returns a closure to be called later on. 
-
-Note that `closure` and `adaptor`, unlike `range_adaptro_closure` are not standardized because the author, Berry Revzin, wasn't sure their the optimal solution
-but its possible they will be in a future standard.
+Note: the first version of this example now compiles and a range holding its elements by a shared_ptr is now indeed a view as well as concat.
 
 ---
 
@@ -2910,6 +2482,44 @@ Note: to join the chunks to get a list of all the lines
 
 Note: and the join the lines using the new `join_with` adaptor entering a new line character in between
 
+---
+
+<!-- .slide: class="aside" -->
+
+# live demo
+
+----
+
+## resources
+
+- C++23 calendar: https://godbolt.org/z/W4vo9jqPd
+- range-v3 calendar: https://github.com/ericniebler/range-v3/blob/master/example/calendar.cpp
+- Eric Niebler's 2015 talk: https://youtu.be/mFUXNMfaciE
+- Barry Revzin's 2022 talk about ranges formatting: https://youtu.be/EQELdyecZlU
+- A Plan for C++23 Ranges: https://wg21.link/p2214
+
+----
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 50% 20% 30%; font-size: 75%">
+
+# Thank you
+
+<!-- .element: style="grid-column: 1 / 4; font-size: calc(2*var(--r-heading1-size));" -->
+
+![gmail](resources/Gmail_icon_(2020).png)
+
+![github](resources/github-mark-white.png)
+
+![twitter](resources/twitter.png)
+
+[dvirtz@gmail.com](mailto:dvirtz@gmail.com)
+
+[github.com/dvirtz](https://github.com/dvirtz)
+
+[@dvirtzwastaken](https://twitter.com/dvirtzwastaken)
+
+</div>
+
 ----
 
 <!-- .slide: data-background-image="resources/materialize.jpg" -->
@@ -3317,44 +2927,6 @@ auto format_as_string(const std::string_view fmt, Rng&& rng) {
 ```
 
 Note: here is the implementation of `format_as_string`. If ranges formatting is supported I use that, otherwise, I convert the range to a string.
-
----
-
-<!-- .slide: class="aside" -->
-
-# live demo
-
-----
-
-## resources
-
-- C++23 calendar: https://godbolt.org/z/qvqW8vYrq
-- range-v3 calendar: https://github.com/ericniebler/range-v3/blob/master/example/calendar.cpp
-- Eric's 2015 talk: https://youtu.be/mFUXNMfaciE
-- Berry's 2022 talk about ranges formatting: https://youtu.be/EQELdyecZlU
-- A Plan for C++23 Ranges: https://wg21.link/p2214
-
-----
-
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 50% 20% 30%; font-size: 75%">
-
-# Thank you
-
-<!-- .element: style="grid-column: 1 / 4; font-size: calc(2*var(--r-heading1-size));" -->
-
-![gmail](resources/Gmail_icon_(2020).png)
-
-![github](resources/github-mark-white.png)
-
-![twitter](resources/twitter.png)
-
-[dvirtz@gmail.com](mailto:dvirtz@gmail.com)
-
-[github.com/dvirtz](https://github.com/dvirtz)
-
-[@dvirtzwastaken](https://twitter.com/dvirtzwastaken)
-
-</div>
 
 ----
 
@@ -3795,6 +3367,282 @@ Note: for that the standard provides `fold_left_with_iter` which returns the end
 <!-- .element: style="font-size: 0.7em" -->
 
 Note: this table shows all the fold family in C++ 23.
+
+----
+
+<!-- .slide: data-background-image="resources/piping.jpg" -->
+
+## Piping user-defined range adaptors
+
+<!-- .element: class="r-stretch" style="text-shadow: 2px 2px 2px black; color: #fea98e" -->
+
+
+Source: [mybestplace.com](https://www.mybestplace.com/en/article/singing-ringing-tree-the-tree-that-sings-with-the-blowing-wind)
+
+<!-- .element: style="font-size: 0.5em" -->
+
+Note: One last C++23 addition we are going to use for the next step in the calendar software is the ability to easily make
+custom views composable using the pipe operator.
+Enabling users to write their own range adaptors that inter-operate well with standard library adaptors, will remove the urgency of adding 
+more adaptors to the standard library. 
+
+---
+
+### range adaptor object
+
+`$$
+ adaptor(range, args...) \equiv \\
+ adaptor(args...)(range) \equiv \\
+ range\:|\:adaptor(args...) 
+$$`
+
+e.g. `views::transform`
+
+Note: the world of range adaptors have two important concepts. The first is a range adaptor object, such as views::transform that accepts a viewable
+range and optionally more arguments and produces a view over that range. We interact with the adaptor by calling it while passing the range and the 
+other arguments (the first line in the definition) or by only passing the other arguments and calling the result with the range or, more frequently, 
+piping the range in.
+The object resulted from passing only the other arguments has a name...
+
+---
+
+### range adaptor closure object
+
+<div class="r-stack">
+
+<div class="fragment fade-out" data-fragment-index="0" style="width: 100%">
+
+`$$ C(R) \equiv R\:|\:C $$`
+
+e.g. `views::reverse`, `views::transform(f)`
+
+</div>
+
+<div class="fragment fade-in" data-fragment-index="0" style="width: 100%">
+
+`$$ R\:|\:C\:|\:D \equiv R\:|\:(C\:|\:D) $$`
+
+```cpp
+///hide
+#include <ranges>
+namespace views = std::views;
+
+///unhide
+auto reverse_trasform(auto f) {
+  return views::reverse | views::transform(f);
+}
+```
+
+</div>
+
+</div>
+
+
+Note: and that is a range adaptor closure object, so a unary function object that accepts a `viewable_­range` argument and returns a view 
+  such that the above equation holds. 
+
+A closure composition is itself a closure, so the result of reverse_transform is still composable.
+
+
+---
+
+## more complex example
+
+```cpp [1 -4|6]
+///libs=fmt:trunk
+///fails=no match for 'operator|'
+///hide
+#include <ranges>
+#include <vector>
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
+#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
+#include "https://godbolt.org/z/K884c4hza/code/1" // print
+namespace ranges = std::ranges;
+namespace views = std::views;
+
+///unhide
+auto reverse_tail = [](ranges::forward_range auto&& R) {
+  return concat(R | views::take(1), 
+                R | views::drop(1) | views::reverse);
+};
+
+///hide
+int main() {
+///unhide
+std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
+///hide
+}
+```
+
+Note: A more complex adaptor, however, is not automatically a closure 
+
+and so trying to pipe a range to it would fail to compile.  
+
+---
+
+### `ranges::range_adaptor_closure`
+
+```cpp [1-7|2,9]
+///libs=fmt:trunk
+///fails=no match for 'operator|'
+///hide
+#include <ranges>
+#include <vector>
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
+#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
+#include "https://godbolt.org/z/K884c4hza/code/1" // print
+
+namespace ranges = std::ranges;
+namespace views = std::views;
+
+///unhide
+struct reverse_tail_fn 
+  : std::ranges::range_adaptor_closure<reverse_tail_fn> {
+  auto operator()(ranges::forward_range auto&& R) {
+    return concat(R | views::take(1), 
+                  R | views::drop(1) | views::reverse);
+  };
+}  reverse_tail;
+
+///hide
+int main() {
+///unhide
+std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
+///hide
+}
+```
+
+Note: C++23 adds a utility type, range_adaptor_closure, that when deriving from makes a user defined type a closure
+
+so replacing the lambda with a proper function object deriving from `range_adaptor_object` makes this snippet well formed.
+
+---
+
+### back to lambda
+
+```c++ [1-13|15-20]
+///libs=fmt:trunk
+///hide
+#include <ranges>
+#include <vector>
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
+#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
+#include "https://godbolt.org/z/K884c4hza/code/1" // print
+namespace ranges = std::ranges;
+namespace views = std::views;
+
+///unhide
+template <typename F>
+class closure 
+  : public std::ranges::range_adaptor_closure<closure<F>> {
+    F f;
+public:
+    constexpr closure(F f) : f(f) { }
+
+    template <std::ranges::viewable_range R>
+        requires std::invocable<F const&, R>
+    constexpr auto operator()(R&& r) const {
+        return f(std::forward<R>(r));
+    }
+};
+
+closure reverse_tail = [](ranges::forward_range auto&& R) {
+  return concat(R | views::take(1), 
+                R | views::drop(1) | views::reverse);
+};
+
+///hide
+int main() {
+///unhide
+std::println("{}", std::vector{1, 2, 3, 4} | reverse_tail);
+///hide
+}
+```
+
+Note: of course, we don't want to go back to the pre C++11 days where we had to define a function object before calling an algorithm
+so we can have a generic closure object, wrapping a lambda and forwarding calls into it 
+
+and when defining the lambda, we use `CTAD` to automatically deduce the closure type and we can pipe into it again. 
+
+---
+
+### case for adaptor
+
+```cpp [18-24,26-27|1-16]
+///libs=fmt:trunk
+///hide
+#include <ranges>
+#include <vector>
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
+#include "https://godbolt.org/z/n43nMfj58/code/1" // concat
+#include "https://godbolt.org/z/K884c4hza/code/1" // print
+namespace ranges = std::ranges;
+namespace views = std::views;
+
+namespace std {
+
+constexpr inline auto bind_back(auto &&f, auto &&...args) {
+    return [=](auto &&...args2) { return f(args2..., args...); };
+}
+
+}  // namespace std
+
+template <typename F>
+class closure 
+  : public std::ranges::range_adaptor_closure<closure<F>> {
+    F f;
+public:
+    constexpr closure(F f) : f(f) { }
+
+    template <std::ranges::viewable_range R>
+        requires std::invocable<F const&, R>
+    constexpr auto operator()(R&& r) const {
+        return f(std::forward<R>(r));
+    }
+};
+
+///unhide
+template <typename F>
+class adaptor {
+    F f;
+public:
+    constexpr adaptor(F f) : f(f) { }
+
+    template <typename... Args>
+    constexpr auto operator()(Args&&... args) const {
+        if constexpr (std::invocable<F const&, Args...>) {
+            return f(std::forward<Args>(args)...);
+        } else {
+            return closure(std::bind_back(f, 
+              std::forward<Args>(args)...));
+        }
+    }
+};
+
+adaptor reverse_transform_tail = 
+  [](ranges::forward_range auto&& r, auto&& f) {
+  return concat(r | views::take(1), 
+                r | views::drop(1) 
+                  | views::reverse 
+                  | views::transform(f));
+};
+
+///hide
+int main() {
+///unhide
+std::println("{}", std::vector{1, 2, 3, 4} 
+  | reverse_transform_tail(std::identity{}));
+///hide
+}
+```
+
+Note: if our adaptor takes additional arguments as in this example, than we can wrap it with an adaptor object to make it composable.
+
+We define adaptor as seen here. When called, it checks (at compile time) if it is already invocable, which will happen when the range is passed along the other
+arguments, otherwise it returns a closure to be called later on. 
+
+Note that `closure` and `adaptor`, unlike `range_adaptro_closure` are not standardized because the author, Berry Revzin, wasn't sure their the optimal solution
+but its possible they will be in a future standard.
 
 ----
 
