@@ -4,7 +4,9 @@
 
 <div class="fragment fade-out" data-fragment-index="0">
 
-- [C++23 ranges: conceptual changes and useful practicalities](ranges_23/ranges.md), April 2023, ACCU
+- C++23 ranges: conceptual changes and useful practicalities, 
+  - [April 2023, ACCU](ranges_23/ranges.md)
+  - [June 2023, Core C++](ranges_23/corecpp.md)
 - Number ⟷ String conversions
   - [August 2021, Core C++](number-string-core-cpp/number_string.md)
   - [July 2022, C++ On Sea](number-string-cpp-on-sea/number_string.md)
