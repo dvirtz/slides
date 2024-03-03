@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendar</title>
+
+</head>
+
+<body>
+  <h1>Calendar</h1>
+  <div>
+    <label for="year">Enter a year:</label>
+    <input type="number" id="year" name="year" oninput="showCalendar(this.valueAsNumber, startOfWeek.value)">
+    <!-- select start of week -->
+    <label for="startOfWeek">Start of week:</label>
+    <select id="startOfWeek" name="startOfWeek" onchange="showCalendar(year.valueAsNumber, this.value)">
+      <option value="0">Sunday</option>
+      <option value="1">Monday</option>
+    </select>
+  </div>
+  <pre id="calendar">
+  </pre>
+</body>
+
+</html>

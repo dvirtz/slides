@@ -1,0 +1,23 @@
+{
+  "name": "calendar-generator",
+  "private": true,
+  "main": "dist/src/ts/interface.js",
+  "binary": {
+    "napi_versions": [
+      7
+    ]
+  },
+  "scripts": {
+    "preinstall": "pipenv install",
+    "install": "pkg-prebuilds-verify ./dist/binding-options.js || pipenv run cmake-js compile",
+    "build": "pipenv run cmake-js build && tsc --build",
+    "build:debug": "pipenv run cmake-js rebuild -D && tsc --build"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.1.0",
+    "pkg-prebuilds": "^0.2.1"
+  },
+  "devDependencies": {
+    "cmake-js": "^7.3.0"
+  }
+}
