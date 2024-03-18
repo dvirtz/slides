@@ -1,0 +1,5 @@
+.reveal section>pre:has(code[data-url]) {
+  min-width: 70vw;
+  position: relative;
+  left: -10vw;
+}
