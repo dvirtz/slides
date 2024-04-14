@@ -8,6 +8,3 @@ if (typeof RevealTimeline !== 'undefined') {
 if (typeof RevealPdf !== 'undefined') {
   options.plugins.push(RevealPdf)
 }
-if (typeof EmbedCode !== 'undefined') {
-  options.plugins.splice(options.plugins.indexOf(RevealHighlight), 0, EmbedCode);
-}

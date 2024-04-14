@@ -1,5 +1,5 @@
-.reveal section>pre:has(code[data-url]) {
-  min-width: 70vw;
+.reveal section>pre.r-stretch {
+  min-width: 60vw;
   position: relative;
-  left: -10vw;
+  left: -5vw;
 }

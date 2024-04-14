@@ -15,7 +15,9 @@ string(
           ${NODE_ADDON_API_DIR})
 
 # get supported Node-API version
-file(READ ${CMAKE_SOURCE_DIR}/../../package.json PACKAGE_JSON)
+cmake_path(GET CMAKE_SOURCE_DIR PARENT_PATH PARENT)
+cmake_path(GET PARENT PARENT_PATH ROOT_PATH)
+file(READ ${ROOT_PATH}/package.json PACKAGE_JSON)
 string(JSON BINARY GET "${PACKAGE_JSON}" binary)
 string(JSON NAPI_VERSIONS GET "${BINARY}" napi_versions)
 string(JSON NODE_API_VERSION GET "${NAPI_VERSIONS}" 0)
@@ -50,6 +52,7 @@ add_executable(${PROJECT_NAME}-cli main.cpp)
 target_link_libraries(${PROJECT_NAME}-cli PRIVATE calendar)
 
 add_custom_target(prebuild ALL
-                  COMMAND pkg-prebuilds-copy --baseDir .
-                          --source $<PATH:RELATIVE_PATH,$<TARGET_FILE:${PROJECT_NAME}>,$<PATH:NORMAL_PATH,${CMAKE_SOURCE_DIR}>>
-                          --name ${PROJECT_NAME} --napi_version ${NODE_API_VERSION})
+                  npx pkg-prebuilds-copy --baseDir .
+                          --source $<PATH:RELATIVE_PATH,$<TARGET_FILE:${PROJECT_NAME}>,${ROOT_PATH}>
+                          --name ${PROJECT_NAME} --napi_version ${NODE_API_VERSION}
+                  WORKING_DIRECTORY ${ROOT_PATH})

@@ -4,7 +4,9 @@
 
 <div class="fragment fade-out" data-fragment-index="0">
 
-- [Modern C++ addons for node.js](modern-js-addons/js_addons.md)
+- Modern C++ addons for node.js
+  - [March 2024, Core C++](modern-js-addons/js_addons.md)
+  - [April 2004, ACCU](modern-js-addons/accu.md)
 - C++23 ranges: conceptual changes and useful practicalities,
   - [April 2023, ACCU](ranges_23/ranges.md)
   - [June 2023, Core C++](ranges_23/corecpp.md)
