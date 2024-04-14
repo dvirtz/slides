@@ -159,7 +159,7 @@ Both tools require a C++ toolchain to be installed on the system. For node-gyp, 
 
 ---
 
-![Pipenv](assets/pipenv.png)
+![`Pipenv`](assets/pipenv.png)
 
 <!-- .element: class="r-stretch" -->
 
@@ -170,7 +170,7 @@ pipenv run cmake
 
 Notes:
 
-Pipenv is a tool that automatically creates and manages virtual Python environments. It's main advantages here is the ability to run installed pyton packages simply with the `pipenv run`command.
+`Pipenv` is a tool that automatically creates and manages virtual Python environments. It's main advantages here is the ability to run installed python packages simply with the `pipenv run`command.
 
 ---
 
