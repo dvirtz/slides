@@ -14,7 +14,8 @@
     "flagWords": [],
     "ignorePaths": [
         ".github/workflows/publish.yml",
-        "package.json"
+        "package.json",
+        "**/node_modules/**"
     ],
     "languageSettings": [
         {

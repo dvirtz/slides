@@ -1506,7 +1506,7 @@ auto rng = get_ints()
          | views::transform([](int i){ return i * i; });
 ```
 
-Note: the first version of this example now compiles and a range holding its elements by a shared_ptr is now indeed a view as well as concat.
+Note: the first version of this example now compiles and a range holding its elements by a shared_ptr is now indeed a view as well as `concat`.
 
 ---
 
@@ -2340,7 +2340,7 @@ auto transpose_months() {
 
 Note: going back to building the calendar, we use `zip_transform` along with `concat` to tile the three months of each chunk side by side as we described.
 In eric's implementation, this is called transpose and he used a custom adaptor called `transpose` which is in fact a run-time version of zip, the same way
-that join is a runtime version of concat. This enables his implementation to support customizing the number of months in each row but had I followed the
+that join is a runtime version of `concat`. This enables his implementation to support customizing the number of months in each row but had I followed the
 same path I wouldn't be able to show `zip` view. 
 
 ---
