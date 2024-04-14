@@ -8,7 +8,8 @@
     "present": "reveal-md slides/index.md -w",
     "generate": "reveal-md slides --static .site",
     "test": "mocha",
-    "spellcheck": "cspell slides/**/*.md"
+    "spellcheck": "cspell slides/**/*.md",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
     "cspell": "^8.7.0",
     "filehound": "^1.17.6",
     "github-fork-ribbon-css": "^0.2.3",
+    "husky": "^9.0.11",
     "jquery": "^3.7.1",
     "mocha": "^10.4.0",
     "reveal-test": "^3.2.1"
