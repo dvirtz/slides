@@ -23,15 +23,15 @@
     "url": "https://github.com/dvirtz/slides/issues"
   },
   "devDependencies": {
-    "cspell": "^8.3.2",
-    "filehound": "^1.17.4",
+    "cspell": "^8.7.0",
+    "filehound": "^1.17.6",
     "github-fork-ribbon-css": "^0.2.3",
-    "jquery": "^3.6.0",
-    "mocha": "^10.0.0",
-    "reveal-test": "^3.1.0"
+    "jquery": "^3.7.1",
+    "mocha": "^10.4.0",
+    "reveal-test": "^3.2.1"
   },
   "dependencies": {
-    "reveal-compiler-explorer": "^3.1.0",
+    "reveal-compiler-explorer": "^3.2.1",
     "reveal-md": "^5.5.2",
     "reveal-pdf": "^1.0.1",
     "reveal-timeline": "^1.2.1",

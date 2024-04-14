@@ -3,7 +3,7 @@ import path from 'path';
 import { cwd } from 'process';
 import FileHound from 'filehound';
 
-const snippets = await FileHound.create().path('slides').ext('md').find()
+const snippets = await FileHound.create().path('slides').depth(1).ext('md').find()
   .map(async file => {
     const config = (() => {
       if (file.endsWith('number_string.md')) {
