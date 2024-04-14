@@ -600,7 +600,7 @@ Note: Next thing we want to do is take the list of dates and format them as we w
 
 <pre>
 <code class="lang-cpp" data-trim data-line-numbers="|1|2|3|4" data-fragment-index="0">
-///compiler=clang_trunk
+///compiler=clang1810
 ///options+=-std=c++2b -stdlib=libc++ -fexperimental-library
 ///output=[1, 2, 3]\n{1, 2, 3}\n(42, 16)\n{1: 2, 3: 4}
 ///hide
@@ -1241,7 +1241,11 @@ into coroutines in this talk. For that you gave other talks in this conference b
 ### `std::generator`
 
 ```cpp [1-8|10-11]
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///hide
+#include <utility>
+#include <print>
 #if __has_include(<generator>)
 ///unhide
 #include <generator>
@@ -1348,11 +1352,12 @@ In particular, the default reference type is an rvalue reference which means the
 ### yielding ranges
 
 ```cpp
-///libs=fmt:trunk
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///output=["Hello", "Elements", "Of"]
 ///hide
-#include <https://godbolt.org/z/YrdWqrMTv/code/1> // generator
-#include <https://godbolt.org/z/1jWT1a5KT/code/1> // print
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
+#include <print>
 #include <vector>
 
 ///unhide
@@ -1374,7 +1379,7 @@ Note: for yielding a sequence, instead of calling `co_yield` in a loop, you can 
 
 ```cpp
 ///hide
-#include <https://godbolt.org/z/YrdWqrMTv/code/1> // generator
+#include <generator>
 
 ///unhide
 struct Tree {
@@ -1400,12 +1405,13 @@ See how elegant this in-order binary tree traversal algorithm looks using `std::
 ### implementing new adaptors
 
 ```cpp [1-12|14-17]
-///libs=fmt:trunk
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///hide
-#include <https://godbolt.org/z/YrdWqrMTv/code/1> // generator
-#include <https://godbolt.org/z/K884c4hza/code/1> // print
+#include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
 #include <array>
 #include <vector>
+#include <print>
 
 ///unhide
 template <std::ranges::range Head, std::ranges::range... Tail>
@@ -1460,7 +1466,7 @@ a lightweight range which can be passed around freely between adaptors.
 
 ```cpp
 ///hide
-#include <https://godbolt.org/z/YrdWqrMTv/code/1> // generator
+#include <generator>
 
 ///unhide
 template <std::ranges::range Head, std::ranges::range... Tail>
@@ -1932,14 +1938,26 @@ and so trying to pipe a range to it would fail to compile.
 ### `ranges::range_adaptor_closure`
 
 ```cpp [1-7|2,9]
-///libs=fmt:trunk
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///fails=no match for 'operator|'
 ///hide
 #include <ranges>
 #include <vector>
+#include <print>
 #include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
 #include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
+
+#if defined(__clang__)
+
+namespace std::ranges {
+
+template <typename D>
+using range_adaptor_closure = __range_adaptor_closure<D>;
+
+}  // namespace std::ranges
+
+#endif
 
 namespace ranges = std::ranges;
 namespace views = std::views;
@@ -1970,13 +1988,26 @@ so replacing the lambda with a proper function object deriving from `range_adapt
 ### back to lambda
 
 ```c++ [1-13|15-20]
-///libs=fmt:trunk
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///hide
 #include <ranges>
 #include <vector>
+#include <print>
 #include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
 #include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
+
+#if defined(__clang__)
+
+namespace std::ranges {
+
+template <typename D>
+using range_adaptor_closure = __range_adaptor_closure<D>;
+
+}  // namespace std::ranges
+
+#endif
+
 namespace ranges = std::ranges;
 namespace views = std::views;
 
@@ -2018,13 +2049,14 @@ and when defining the lambda, we use `CTAD` to automatically deduce the closure 
 ### case for adaptor
 
 ```cpp [18-24,26-27|1-16]
-///libs=fmt:trunk
+///compiler=clang1810
+///options=-std=c++2b -stdlib=libc++
 ///hide
 #include <ranges>
 #include <vector>
+#include <print>
 #include "https://godbolt.org/z/1vfTWKdcf/code/1" // generator
 #include "https://godbolt.org/z/n43nMfj58/code/1" // concat
-#include "https://godbolt.org/z/K884c4hza/code/1" // print
 namespace ranges = std::ranges;
 namespace views = std::views;
 
@@ -2033,6 +2065,17 @@ namespace std {
 constexpr inline auto bind_back(auto &&f, auto &&...args) {
     return [=](auto &&...args2) { return f(args2..., args...); };
 }
+
+#if defined(__clang__)
+
+namespace ranges {
+
+template <typename D>
+using range_adaptor_closure = __range_adaptor_closure<D>;
+
+#endif
+
+}  // namespace ranges
 
 }  // namespace std
 
@@ -2106,7 +2149,6 @@ but its possible they will be in a future standard.
 #include <chrono>
 
 #include <https://godbolt.org/z/WG1caxrxn/code/1> // closure
-#include <https://godbolt.org/z/o46E4a9ds/code/1> // to
 
 namespace ranges = std::ranges;
 namespace views = std::views;
@@ -2882,8 +2924,7 @@ Note: finally, cartesian produce produces all the possible combinations of eleme
 ///hide
 #include <ranges>
 #include <string>
-
-#include <https://godbolt.org/z/1vfTWKdcf/code/1> // generator
+#include <generator>
 #include <https://godbolt.org/z/fceWKG4KE/code/1> // concat
 
 namespace ranges = std::ranges;
@@ -3455,9 +3496,7 @@ Note: besides additional constructors, we also got more convenience methods to i
 ```cpp
 ///hide
 #include <format>
-#include <https://godbolt.org/z/o46E4a9ds/code/1> // to
-
-namespace ranges = std::ranges;
+#include <ranges>
 
 ///unhide
 namespace detail {
@@ -3465,7 +3504,7 @@ template <typename Rng>
 auto format_as_string(const std::string_view fmt, Rng&& rng) {
   return std::vformat(fmt, std::make_format_args(
 #if __cpp_lib_format_ranges < 202207L
-    std::forward<Rng>(rng) | ranges::to<std::string>()
+    std::forward<Rng>(rng) | std::ranges::to<std::string>()
 #else
   std::forward<Rng>(rng)
 #endif
