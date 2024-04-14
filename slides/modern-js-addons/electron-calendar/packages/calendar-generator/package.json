@@ -8,10 +8,10 @@
     ]
   },
   "scripts": {
-    "preinstall": "pipenv install",
-    "install": "pkg-prebuilds-verify ./dist/binding-options.js || pipenv run cmake-js compile",
-    "build": "pipenv run cmake-js build && tsc --build",
-    "build:debug": "pipenv run cmake-js rebuild -D && tsc --build"
+    "preinstall": "pipenv install && tsc --build",
+    "install": "pkg-prebuilds-verify ./dist/src/ts/binding-options.js || npm run build",
+    "build": "pipenv run cmake-js build && tsc --build && pkg-prebuilds-verify ./dist/src/ts/binding-options.js",
+    "build:debug": "pipenv run cmake-js rebuild -D"
   },
   "dependencies": {
     "node-addon-api": "^7.1.0",

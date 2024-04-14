@@ -12,134 +12,18 @@ scripts:
   - scripts/custom-options.js
 ---
 
-### Modern C++ addons for node.js
-
-![node_cpp](assets/node_cpp.png)
-
-<!-- .element: class="r-stretch" -->
-
-Dvir Yitzchaki
+<!-- .slide: data-background-image="assets/accu_title.png" -->
 
 ---
 
 <!-- .slide: data-background-image="assets/parquet-viewer.png" data-background-size="contain" -->
 
-----
+---
 
-![Node.js Logo](assets/nodejsLight.svg)
-
-```ts
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-
-const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello World!\n');
-});
-
-// starts a simple http server locally on port 3000
-server.listen(3000, '127.0.0.1', () => {
-  console.log('Listening on 127.0.0.1:3000');
-});
-```
-
-<!-- .element: style="font-size: 0.45em" -->
-
-Notes:
-
-Node.js, created in 2008 by Ryan Dahl, is a runtime environment that allows developers to build network applications using JavaScript. It is based on the V8 JavaScript engine, which is the same engine used by Google Chrome. Node.js provides an event-driven, non-blocking I/O model, making it suited for handling concurrent requests and real-time applications.
-
-Node.js is commonly used for building web servers, APIs, and even desktop applications, as we'll see today. It has a rich ecosystem of modules, libraries and frameworks that can be used to extend its functionality.
-
-We will use Typescript, a superset of JavaScript that adds static typing and other features, to write our code examples.
+<!-- .slide: data-background-image="assets/calendar.png" data-background-size="contain" -->
 
 ---
 
-![electron](assets/electronjs_logo_icon_169208.png)
-
-- Cross-platform framework for building desktop apps with web technologies.
-- Leverages HTML, CSS, and JavaScript for native-like user interfaces.
-- Access to Node.js modules and vibrant community support.
-
-Notes:
-
-Electron is a framework that allows developers to build cross-platform desktop applications using web technologies such as HTML, CSS, and JavaScript. It was initially developed by GitHub and has gained significant popularity due to its ease of use and powerful capabilities. Electron leverages the Chromium rendering engine and Node.js runtime.
-
-One of the most famous applications built with Electron is Visual Studio Code, which both this presentation and the demo are built with.
-
----
-
-### Electron process model
-
-![electron processes](assets/electron_processes.svg)
-
-Notes: 
-
-Each Electron app has a single main process, which acts as the application's entry point. The main process runs in a Node.js environment, meaning it has the ability to require modules and use all of Node.js APIs.
-
-The main process' primary purpose is to create and manage application windows, control the application's lifecycle and interact with the operating system. 
-
-Each application window loads a web page in a separate renderer process. The rendered process, by default,
-does not have access to Node.js APIs for security reasons, and needs to communicate with the main process via IPC (Inter-Process Communication) to perform tasks that require access to the file system, network, or other system resources.
-
----
-
-<!-- .slide: data-transition="slide-in fade-out" -->
-
-`index.html`
-
-```html[|13-20|22-23]
-FILE: modern-js-addons/electron-calendar/src/index.html
-```
-
-<!-- .element: class="r-stretch" -->
-
----
-
-<!-- .slide: data-transition="fade-in slide-out" -->
-
-<iframe src="electron-calendar/src/index.html" class="r-stretch" style="background-color: aliceblue; width: 600px"></iframe>
-
----
-
-`main.ts`
-
-```ts[16-28|33,37-38]
-FILE: modern-js-addons/electron-calendar/src/main.ts
-```
-
-<!-- .element: class="r-stretch" -->
-
----
-
-`renderer.ts`
-
-```ts[32-42]
-FILE: modern-js-addons/electron-calendar/src/renderer.ts
-```
-
-<!-- .element: class="r-stretch" -->
-
----
-
-`preload.ts`
-
-```ts[5-13]
-FILE: modern-js-addons/electron-calendar/src/preload.ts
-```
-
-<!-- .element: class="r-stretch" -->
-
----
-
-`main.ts`
-
-```ts[34-36]
-FILE: modern-js-addons/electron-calendar/src/main.ts
-```
-
-<!-- .element: class="r-stretch" -->
-
----
 
 <!-- .slide: data-background-image="assets/accu_2023.png" data-background-size="contain" -->
 
@@ -433,5 +317,5 @@ release:
 
 ----
 
-<!-- .slide: data-background-image="assets/thank_you.png" data-background-size="contain" -->
+<!-- .slide: data-background-image="assets/accu_thank_you.png" -->
 

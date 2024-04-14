@@ -1,8 +1,8 @@
-const { readFileSync } = require('fs');
+const { readFile } = require('fs').promises;
 const path = require('path');
-const { getInitialDir } = require('reveal-md/lib/config');
+const os = require('os')
 
-const LINE_SEPARATOR = '\n';
+const LINE_SEPARATOR = os.EOL;
 const FILE_REF_REGEX = /^FILE: (.+)$/;
 const SVG_START = /<svg.*>/;
 const SVG_END = /<\/svg>/;
@@ -11,17 +11,17 @@ const SVG_URL = /url\(#([^)]+)\)/;
 const SLIDES = /^# Slides/;
 const SLIDE_REF = /\.md\)/mg;
 
-const loadFileContent = (filePath, options, svgState) => {
-  const contents = readFileSync(path.join(options.initialDir, filePath), 'utf-8');
+const loadFileContent = async (filePath, options, svgState) => {
+  const contents = await readFile(path.join(options.initialDir, filePath), 'utf-8');
   if (path.extname(filePath) === '.md') {
-    return preprocessMarkdown(contents, options, svgState);
+    return await preprocessMarkdown(contents, options, svgState);
   }
   return contents;
 };
 
-const processLine = (line, options, svgState) => {
+const processLine = async (line, options, svgState) => {
   for (const m of (line.match(FILE_REF_REGEX) || []).slice(1)) {
-    return loadFileContent(m, options, svgState);
+    return await loadFileContent(m, options, svgState);
   }
 
   if (svgState.insideSvg) {
@@ -38,11 +38,10 @@ const processLine = (line, options, svgState) => {
   return line;
 }
 
-const preprocessMarkdown = (markdown, options, svgState) => {
-  return markdown
-    .split(LINE_SEPARATOR)
-    .map(line => processLine(line, options, svgState))
-    .join(LINE_SEPARATOR);
+const preprocessMarkdown = async (markdown, options, svgState) => {
+  const lines = markdown.split(LINE_SEPARATOR);
+  const processedLines = await Promise.all(lines.map(line => processLine(line, options, svgState)));
+  return processedLines.join(LINE_SEPARATOR);
 }
 
 const preprocess = async (markdown, options) => {
@@ -55,8 +54,8 @@ const preprocess = async (markdown, options) => {
     return markdown.replace(SLIDE_REF, '.html)');
   }
 
-  options.initialDir = await getInitialDir();
-  let res = preprocessMarkdown(markdown, options, svgState);
+  options.initialDir = path.join(path.dirname(__dirname), 'slides');
+  let res = await preprocessMarkdown(markdown, options, svgState);
   return res;
 }
 
