@@ -32,7 +32,7 @@ jobs:
     - name: Generate static site
       run: npm run generate
     - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v1.0.4
+      uses: actions/upload-pages-artifact@v3
       with:
         path: .site
   
@@ -58,5 +58,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
       
